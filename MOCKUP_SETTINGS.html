@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>CUEVO Lyrics - Redesign tab Settings</title>
+<style>
+:root{
+  --v1:#0e0e0f; --v2:#151517; --v3:#1b1c1e; --v4:#232427; --v5:#2e3033;
+  --seam:#0a0a0b;
+  --t1:#dcdde0; --t2:#8d9096; --t3:#5c5f65; --t4:#3c3e43;
+  --live:#ff3b30; --standby:#ffb020; --ok:#4ade80;
+  --mono:"Consolas","Cascadia Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08080a;color:var(--t1);
+  font:12px/1.4 "Segoe UI",system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  padding:56px 40px 110px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto}
+
+/* dokumen */
+.kicker{font:11px/1 var(--mono);color:var(--t3)}
+h1{font-size:25px;font-weight:600;letter-spacing:-.02em;margin:13px 0 10px;color:#fff}
+.lede{color:var(--t2);font-size:13px;line-height:1.65;max-width:70ch}
+.dials{margin-top:20px;display:flex;gap:0;border-top:1px solid #1a1a1c;flex-wrap:wrap}
+.dials div{padding:11px 30px 0 0;font:11px/1.55 var(--mono);color:var(--t3)}
+.dials b{display:block;color:var(--t2);font-weight:400}
+
+section{margin-top:62px}
+.shead{display:flex;align-items:baseline;gap:13px;margin-bottom:6px}
+.shead .n{font:11px/1 var(--mono);color:var(--t4)}
+.shead h2{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.ssub{color:var(--t2);font-size:12.5px;line-height:1.6;max-width:74ch;margin-bottom:18px}
+
+/* audit */
+.audit{border-top:1px solid #1a1a1c}
+.arow{display:grid;grid-template-columns:26px 1fr;gap:14px;padding:11px 0;
+  border-bottom:1px solid #141416;align-items:start}
+.arow .num{font:11px/1.5 var(--mono);color:var(--live)}
+.arow p{font-size:12.5px;color:var(--t2);line-height:1.6}
+.arow b{color:var(--t1);font-weight:600}
+
+/* jendela app */
+.win{background:var(--v2);border:1px solid #000;border-radius:3px;overflow:hidden}
+.tabs{display:flex;background:var(--v3);border-bottom:1px solid var(--seam)}
+.tab{padding:8px 15px;font-size:12px;color:var(--t3);border-right:1px solid var(--seam)}
+.tab.on{background:var(--v2);color:var(--t1)}
+
+/* ====== BERSAMA ====== */
+.fld{font-size:11.5px;color:var(--t3)}
+.inp{background:var(--v1);box-shadow:inset 0 0 0 1px var(--v4);border-radius:2px;
+  padding:6px 10px;font-size:12px;color:var(--t1)}
+.inp.mono{font-family:var(--mono);font-size:11px;color:var(--t2)}
+.b{background:var(--v4);color:var(--t1);border-radius:2px;padding:5px 10px;
+  font-size:11.5px;white-space:nowrap;display:inline-block}
+.b.q{background:transparent;color:var(--t2);box-shadow:inset 0 0 0 1px var(--v4)}
+.cb{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--t2)}
+.cb::before{content:"";width:12px;height:12px;border-radius:2px;
+  box-shadow:inset 0 0 0 1px var(--t4);flex:none}
+.cb.on{color:var(--t1)}
+.cb.on::before{background:var(--t1);box-shadow:inset 0 0 0 1px var(--t1)}
+.pill{font:10px/1 var(--mono);padding:3px 7px;border-radius:2px;letter-spacing:.06em}
+.pill.live{background:var(--ok);color:#04231a;font-weight:700}
+.pill.off{background:var(--v4);color:var(--t3)}
+.pill.warn{background:var(--standby);color:#241800;font-weight:700}
+
+/* ====== OPSI A: modul rak ====== */
+.rack{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--seam)}
+.mod{background:var(--v2);display:flex;flex-direction:column}
+.mod.wide{grid-column:1 / -1}
+.modhead{display:flex;align-items:center;gap:10px;padding:8px 14px;
+  background:var(--v3);border-bottom:1px solid var(--seam)}
+.modhead .name{font-size:12px;color:var(--t1);font-weight:600}
+.modhead .sub{font-size:11px;color:var(--t4)}
+.modhead .sp{flex:1}
+.modbody{padding:12px 14px 14px}
+.arow2{display:grid;grid-template-columns:88px 1fr;gap:12px;align-items:center;
+  padding:5px 0}
+.arow2 .ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hint{font-size:11px;color:var(--t4);margin-top:2px}
+
+/* tabel referensi */
+.ref{margin-top:10px;border-top:1px solid var(--seam)}
+.refhead{display:flex;align-items:center;gap:8px;padding:8px 0 6px;font-size:11px;color:var(--t3)}
+.refgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 22px}
+.refrow{display:grid;grid-template-columns:1fr auto;gap:10px;padding:3px 0;
+  font:11px/1.5 var(--mono)}
+.refrow .a{color:var(--t2)}
+.refrow .d{color:var(--t4)}
+.refgroup{font-size:10.5px;color:var(--t4);padding:8px 0 3px;letter-spacing:.04em}
+
+/* ====== OPSI B: status dulu ====== */
+.conn{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--seam)}
+.card{background:var(--v2);padding:0}
+.cardtop{display:flex;align-items:center;gap:9px;padding:11px 14px;
+  border-bottom:1px solid var(--seam)}
+.cardtop .ttl{font-size:12.5px;font-weight:600;color:var(--t1)}
+.cardtop .sp{flex:1}
+.cardbody{padding:12px 14px 14px;display:flex;flex-direction:column;gap:9px}
+.kv{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kv .k{font-size:11px;color:var(--t3);min-width:52px}
+.big{font:16px/1 var(--mono);color:var(--t1)}
+.muted{font-size:11px;color:var(--t4);line-height:1.5}
+.prefs{margin-top:1px;background:var(--v2)}
+.prefhead{padding:9px 14px;background:var(--v3);border-top:1px solid var(--seam);
+  border-bottom:1px solid var(--seam);font-size:11px;color:var(--t3)}
+.prow{display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;
+  padding:7px 14px;border-bottom:1px solid #141416}
+.prow:last-child{border-bottom:0}
+.prow .ctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.disc{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--v1);
+  border-top:1px solid var(--seam);font-size:11.5px;color:var(--t2)}
+.disc .chev{color:var(--t4);font:11px/1 var(--mono)}
+
+/* verdict */
+.cmp{margin-top:26px;border-top:1px solid #1a1a1c}
+.cmprow{display:grid;grid-template-columns:150px 1fr 1fr;gap:20px;padding:13px 0;
+  border-bottom:1px solid #141416;font-size:12.5px}
+.cmprow .k{color:var(--t3);font-size:11.5px}
+.cmprow p{color:var(--t2);line-height:1.6}
+.cmprow b{color:var(--t1);font-weight:600}
+.cmphead{grid-template-columns:150px 1fr 1fr;font-weight:600;color:var(--t1)}
+@media(max-width:1000px){.rack,.conn{grid-template-columns:1fr}.cmprow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">REDESIGN - TAB SETTINGS - 2 OPSI</div>
+  <h1>CUEVO Lyrics</h1>
+  <p class="lede">Dua arah yang sengaja berbeda cara menyusun informasi, bukan dua kulit
+  dari susunan yang sama. Opsi A mempertahankan kategori yang ada dan memperbaiki
+  penyajiannya. Opsi B mengubah urutan prioritasnya.</p>
+  <div class="dials">
+    <div><b>VARIANCE</b>4 dari 10</div>
+    <div><b>MOTION</b>2 dari 10</div>
+    <div><b>DENSITY</b>7 dari 10</div>
+    <div><b>MODE</b>Redesign, pertahankan bahasa visual</div>
+    <div><b>BATASAN</b>Harus bisa dibangun di QtWidgets</div>
+  </div>
+</header>
+
+<!-- ================= AUDIT ================= -->
+<section>
+  <div class="shead"><span class="n">00</span><h2>Yang salah sekarang</h2></div>
+  <p class="ssub">Diambil dari tangkapan layar tab Settings yang berjalan, bukan dari dugaan.</p>
+  <div class="audit">
+    <div class="arow"><span class="num">1</span><p><b>Sepuluh baris berirama identik.</b>
+      Nama sender yang disetel sekali seumur hidup punya bobot visual yang sama persis
+      dengan tombol OSC yang punya akibat langsung saat acara berjalan.</p></div>
+    <div class="arow"><span class="num">2</span><p><b>Keadaan hidup atau mati tidak terlihat.</b>
+      Tidak ada cara menjawab "OSC saya jalan atau tidak" tanpa mencoba menekan sesuatu.
+      Label statusnya kecil, menempel di ujung baris, dan kosong sampai ada kejadian.</p></div>
+    <div class="arow"><span class="num">3</span><p><b>Daftar alamat OSC jadi dinding teks.</b>
+      Tiga belas alamat dalam satu paragraf mono yang membungkus. Ini bahan rujukan yang
+      dipaksa masuk ke baris formulir.</p></div>
+    <div class="arow"><span class="num">4</span><p><b>Label kiri 96px terlepas dari isinya.</b>
+      Pada baris berisi banyak baris teks, label seperti "Note MIDI" melayang di tengah
+      dan tidak sejajar dengan apa pun.</p></div>
+    <div class="arow"><span class="num">5</span><p><b>Ruang terbuang.</b>
+      Isi setinggi 513px di jendela 860px, sementara path file direntangkan penuh
+      1000px lebih padahal tidak butuh.</p></div>
+    <div class="arow"><span class="num">6</span><p><b>Judul kelompok terlalu pelan.</b>
+      "Output", "Penyimpanan", "Hotkey", "Remote" berukuran sama dengan label baris biasa,
+      hanya dipisah garis rambut.</p></div>
+  </div>
+</section>
+
+<!-- ================= OPSI A ================= -->
+<section>
+  <div class="shead"><span class="n">A</span><h2>Modul rak</h2></div>
+  <p class="ssub">Mempertahankan kategori yang sudah ada, tapi tiap kelompok jadi modul
+  tersendiri dengan kepala dan indikator keadaan. Dua kolom memakai lebar yang selama ini
+  menganggur. Bahan rujukan dipindah ke tabel dua kolom yang bisa dipindai, bukan paragraf.</p>
+
+  <div class="win">
+    <div class="tabs">
+      <span class="tab">Live</span><span class="tab">Library</span><span class="tab">Show</span>
+      <span class="tab">Style</span><span class="tab on">Settings</span>
+    </div>
+
+    <div class="rack">
+      <!-- OUTPUT -->
+      <div class="mod">
+        <div class="modhead">
+          <span class="name">Output Spout</span><span class="sp"></span>
+          <span class="pill live">TERDETEKSI</span>
+        </div>
+        <div class="modbody">
+          <div class="arow2"><span class="fld">Sender name</span>
+            <span class="ctl"><span class="inp" style="width:170px">CUEVO Lyrics</span></span></div>
+          <div class="arow2"><span class="fld">Resolusi</span>
+            <span class="ctl"><span class="inp mono" style="width:64px;text-align:right">1920</span>
+              <span style="color:var(--t4)">x</span>
+              <span class="inp mono" style="width:64px;text-align:right">1080</span>
+              <span class="fld" style="margin-left:6px">FPS</span>
+              <span class="inp mono" style="width:52px">30</span></span></div>
+          <div class="hint">Muncul di Resolume pada Sources, lalu Spout.</div>
+        </div>
+      </div>
+
+      <!-- PENYIMPANAN -->
+      <div class="mod">
+        <div class="modhead">
+          <span class="name">Penyimpanan</span><span class="sp"></span>
+          <span class="modhead sub" style="padding:0;background:none;border:0">11 lagu, 2 show</span>
+        </div>
+        <div class="modbody">
+          <div class="arow2"><span class="fld">Library</span>
+            <span class="ctl"><span class="inp mono" style="flex:1;min-width:0;overflow:hidden;
+              text-overflow:ellipsis;white-space:nowrap">...\CUEVO Lyrics\library.json</span>
+              <span class="b q">Ubah</span><span class="b q">Buka</span></span></div>
+          <div class="arow2"><span class="fld">Shows</span>
+            <span class="ctl"><span class="inp mono" style="flex:1;min-width:0;overflow:hidden;
+              text-overflow:ellipsis;white-space:nowrap">...\CUEVO Lyrics\shows</span>
+              <span class="b q">Ubah</span><span class="b q">Buka</span></span></div>
+          <div class="hint">Path dipendekkan, lengkapnya muncul saat disentuh kursor.</div>
+        </div>
+      </div>
+
+      <!-- HOTKEY -->
+      <div class="mod">
+        <div class="modhead">
+          <span class="name">Hotkey</span><span class="sp"></span>
+          <span class="pill off">GLOBAL MATI</span>
+        </div>
+        <div class="modbody">
+          <div class="refgrid" style="gap:0 18px">
+            <div class="refrow"><span class="a">Space</span><span class="d">play / pause</span></div>
+            <div class="refrow"><span class="a">Ctrl+Alt+Space</span><span class="d">global</span></div>
+            <div class="refrow"><span class="a">Panah kiri kanan</span><span class="d">baris</span></div>
+            <div class="refrow"><span class="a">Ctrl+Alt+panah</span><span class="d">global</span></div>
+            <div class="refrow"><span class="a">B</span><span class="d">blank</span></div>
+            <div class="refrow"><span class="a">Ctrl+Alt+B</span><span class="d">global</span></div>
+          </div>
+          <div style="margin-top:11px"><span class="cb">Aktifkan hotkey global</span></div>
+          <div class="hint">Kombinasi global wajib berbeda. Space polos akan mematikan
+            tombol spasi di seluruh Windows.</div>
+        </div>
+      </div>
+
+      <!-- MIDI -->
+      <div class="mod">
+        <div class="modhead">
+          <span class="name">MIDI</span><span class="sp"></span>
+          <span class="pill live">APC MINI MK2</span>
+        </div>
+        <div class="modbody">
+          <div class="arow2"><span class="fld">Device</span>
+            <span class="ctl"><span class="inp" style="flex:1;min-width:0">APC mini mk2 0</span>
+              <span class="b q">Scan</span></span></div>
+          <div style="margin-top:7px"><span class="cb on">Aktif</span></div>
+          <div class="ref">
+            <div class="refhead">Peta note</div>
+            <div class="refgrid">
+              <div class="refrow"><span class="a">48</span><span class="d">play / pause</span></div>
+              <div class="refrow"><span class="a">51</span><span class="d">blank</span></div>
+              <div class="refrow"><span class="a">49</span><span class="d">baris mundur</span></div>
+              <div class="refrow"><span class="a">52</span><span class="d">lagu mundur</span></div>
+              <div class="refrow"><span class="a">50</span><span class="d">baris maju</span></div>
+              <div class="refrow"><span class="a">53</span><span class="d">lagu maju</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OSC, selebar penuh karena bahan rujukannya paling banyak -->
+      <div class="mod wide">
+        <div class="modhead">
+          <span class="name">OSC</span><span class="sp"></span>
+          <span class="pill off">MATI</span>
+        </div>
+        <div class="modbody">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <span class="cb">Aktif</span>
+            <span class="fld">Port</span><span class="inp mono" style="width:66px">8000</span>
+            <span class="hint" style="margin:0">Bentrokan port akan dilaporkan, bukan didiamkan.</span>
+          </div>
+          <div class="ref">
+            <div class="refhead">Alamat yang diterima</div>
+            <div class="refgrid" style="grid-template-columns:repeat(3,1fr)">
+              <div>
+                <div class="refgroup">TRANSPORT</div>
+                <div class="refrow"><span class="a">/cuevo/play</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/pause</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/playpause</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/next</span><span class="d">baris</span></div>
+                <div class="refrow"><span class="a">/cuevo/prev</span><span class="d">baris</span></div>
+              </div>
+              <div>
+                <div class="refgroup">BLANK</div>
+                <div class="refrow"><span class="a">/cuevo/blank</span><span class="d">toggle</span></div>
+                <div class="refrow"><span class="a">/cuevo/blank/on</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/blank/off</span><span class="d"></span></div>
+              </div>
+              <div>
+                <div class="refgroup">LAGU DAN OFFSET</div>
+                <div class="refrow"><span class="a">/cuevo/song/next</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/song/prev</span><span class="d"></span></div>
+                <div class="refrow"><span class="a">/cuevo/song/goto</span><span class="d">int</span></div>
+                <div class="refrow"><span class="a">/cuevo/offset</span><span class="d">float</span></div>
+                <div class="refrow"><span class="a">/cuevo/offset/nudge</span><span class="d">float</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OPSI B ================= -->
+<section>
+  <div class="shead"><span class="n">B</span><h2>Keadaan dulu, pengaturan belakangan</h2></div>
+  <p class="ssub">Menyusun ulang berdasarkan pertanyaan yang benar-benar ditanyakan operator
+  menjelang acara: "apa saja yang tersambung dan sudah jalan?". Tiga jalur keluar-masuk naik
+  ke atas sebagai panel keadaan; hal yang disetel sekali lalu dilupakan turun ke bawah.</p>
+
+  <div class="win">
+    <div class="tabs">
+      <span class="tab">Live</span><span class="tab">Library</span><span class="tab">Show</span>
+      <span class="tab">Style</span><span class="tab on">Settings</span>
+    </div>
+
+    <div class="conn">
+      <div class="card">
+        <div class="cardtop"><span class="ttl">Output</span><span class="sp"></span>
+          <span class="pill live">TERDETEKSI</span></div>
+        <div class="cardbody">
+          <div class="kv"><span class="k">Sender</span>
+            <span class="inp" style="flex:1;min-width:0">CUEVO Lyrics</span></div>
+          <div class="kv"><span class="k">Frame</span>
+            <span class="big">1920x1080</span><span class="muted">30 fps</span></div>
+          <div class="muted">Resolume melihat sender ini. Ubah hanya saat output berhenti.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><span class="ttl">OSC</span><span class="sp"></span>
+          <span class="pill off">MATI</span></div>
+        <div class="cardbody">
+          <div class="kv"><span class="cb">Aktifkan</span>
+            <span class="k" style="margin-left:6px">Port</span>
+            <span class="inp mono" style="width:66px">8000</span></div>
+          <div class="muted">13 alamat tersedia. Bentrokan port dilaporkan, tidak didiamkan.</div>
+          <div><span class="b q">Lihat daftar alamat</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cardtop"><span class="ttl">MIDI</span><span class="sp"></span>
+          <span class="pill live">AKTIF</span></div>
+        <div class="cardbody">
+          <div class="kv"><span class="cb on">Aktifkan</span>
+            <span class="b q" style="margin-left:auto">Scan</span></div>
+          <div class="kv"><span class="inp" style="flex:1;min-width:0">APC mini mk2 0</span></div>
+          <div class="muted">Note 48 sampai 53. Injakan pedal dihitung sekali, bukan dua.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- daftar alamat, tampil saat dibuka -->
+    <div class="disc"><span class="chev">v</span>
+      <span>Daftar alamat OSC dan peta note MIDI</span>
+      <span style="flex:1"></span>
+      <span class="muted">terbuka</span></div>
+    <div style="background:var(--v1);padding:12px 14px 16px;border-top:1px solid var(--seam)">
+      <div class="refgrid" style="grid-template-columns:repeat(4,1fr)">
+        <div>
+          <div class="refgroup">TRANSPORT</div>
+          <div class="refrow"><span class="a">/cuevo/playpause</span><span class="d"></span></div>
+          <div class="refrow"><span class="a">/cuevo/next</span><span class="d">baris</span></div>
+          <div class="refrow"><span class="a">/cuevo/prev</span><span class="d">baris</span></div>
+        </div>
+        <div>
+          <div class="refgroup">BLANK</div>
+          <div class="refrow"><span class="a">/cuevo/blank</span><span class="d">toggle</span></div>
+          <div class="refrow"><span class="a">/cuevo/blank/on</span><span class="d"></span></div>
+          <div class="refrow"><span class="a">/cuevo/blank/off</span><span class="d"></span></div>
+        </div>
+        <div>
+          <div class="refgroup">LAGU</div>
+          <div class="refrow"><span class="a">/cuevo/song/next</span><span class="d"></span></div>
+          <div class="refrow"><span class="a">/cuevo/song/prev</span><span class="d"></span></div>
+          <div class="refrow"><span class="a">/cuevo/song/goto</span><span class="d">int</span></div>
+        </div>
+        <div>
+          <div class="refgroup">NOTE MIDI</div>
+          <div class="refrow"><span class="a">48</span><span class="d">play / pause</span></div>
+          <div class="refrow"><span class="a">49 50</span><span class="d">baris</span></div>
+          <div class="refrow"><span class="a">52 53</span><span class="d">lagu</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- pengaturan yang jarang disentuh -->
+    <div class="prefs">
+      <div class="prefhead">Disetel sekali</div>
+      <div class="prow"><span class="fld">Library</span>
+        <span class="ctl"><span class="inp mono" style="flex:1;min-width:0;overflow:hidden;
+          text-overflow:ellipsis;white-space:nowrap">...\CUEVO Lyrics\library.json</span>
+          <span class="b q">Ubah</span><span class="b q">Buka folder</span></span></div>
+      <div class="prow"><span class="fld">Shows</span>
+        <span class="ctl"><span class="inp mono" style="flex:1;min-width:0;overflow:hidden;
+          text-overflow:ellipsis;white-space:nowrap">...\CUEVO Lyrics\shows</span>
+          <span class="b q">Ubah</span><span class="b q">Buka folder</span></span></div>
+      <div class="prow"><span class="fld">Hotkey</span>
+        <span class="ctl" style="gap:16px">
+          <span style="font:11px/1 var(--mono);color:var(--t2)">Space</span>
+          <span class="muted">play</span>
+          <span style="font:11px/1 var(--mono);color:var(--t2)">panah</span>
+          <span class="muted">baris</span>
+          <span style="font:11px/1 var(--mono);color:var(--t2)">B</span>
+          <span class="muted">blank</span>
+        </span></div>
+      <div class="prow"><span class="fld">Hotkey global</span>
+        <span class="ctl"><span class="cb">Aktif walau window lain sedang fokus</span>
+          <span style="font:11px/1 var(--mono);color:var(--t4)">Ctrl+Alt+Space, panah, B</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PERBANDINGAN ================= -->
+<section>
+  <div class="shead"><span class="n">-</span><h2>Bedanya di mana</h2></div>
+  <div class="cmp">
+    <div class="cmprow cmphead"><div></div><div>A. Modul rak</div><div>B. Keadaan dulu</div></div>
+    <div class="cmprow"><div class="k">Susunan informasi</div>
+      <p>Tetap: Output, Penyimpanan, Hotkey, Remote. <b>Tidak ada yang perlu dipelajari ulang.</b></p>
+      <p>Berubah: yang tersambung di atas, yang jarang disentuh di bawah.
+        <b>Perlu penyesuaian kebiasaan.</b></p></div>
+    <div class="cmprow"><div class="k">Menjawab "sudah jalan belum"</div>
+      <p>Lewat lencana di kepala tiap modul. Terbaca, tapi harus dicari ke empat tempat.</p>
+      <p>Tiga panel sejajar di paling atas. <b>Satu pandangan, selesai.</b></p></div>
+    <div class="cmprow"><div class="k">Bahan rujukan</div>
+      <p>Menetap di dalam modulnya, dikelompokkan tiga kolom. Selalu terlihat.</p>
+      <p>Dilipat jadi satu bagian yang bisa dibuka tutup. Lebih rapi, satu klik lagi.</p></div>
+    <div class="cmprow"><div class="k">Kepadatan</div>
+      <p>Paling padat. Semua muat tanpa gulir di 1280x800.</p>
+      <p>Lebih lapang di atas, ada gulir kalau daftar alamat dibuka.</p></div>
+    <div class="cmprow"><div class="k">Risiko</div>
+      <p>Dua kolom bisa terasa penuh di layar sempit. Sudah disiapkan runtuh jadi satu kolom.</p>
+      <p><b>Mengubah susunan navigasi.</b> Butuh persetujuanmu dulu, karena kebiasaan
+        yang sudah terbentuk ikut berubah.</p></div>
+    <div class="cmprow"><div class="k">Biaya bangun</div>
+      <p>Sedang. Widget yang ada dipakai ulang, tata letaknya saja yang disusun ulang.</p>
+      <p>Sedang sampai besar. Butuh komponen panel keadaan dan bagian yang bisa dilipat.</p></div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

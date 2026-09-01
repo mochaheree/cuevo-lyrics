@@ -1,0 +1,17 @@
+# Dibutuhkan di semua platform (GUI, pencarian lirik, render frame)
+PySide6>=6.5
+requests
+Pillow
+
+# Dibutuhkan HANYA untuk fitur kirim ke Spout -> WAJIB di Windows.
+# Tanpa ini aplikasi tetap jalan (cari, muat, preview); tombol
+# "Mulai output" saja yang nonaktif dengan keterangan di tooltip.
+pygame
+PyOpenGL
+SpoutGL
+
+# Opsional -- hanya untuk trigger lewat MIDI (REQ-F-RC-02).
+# Tanpa ini aplikasi tetap jalan penuh; checkbox MIDI di tab Settings
+# saja yang nonaktif dengan keterangan cara memasangnya.
+# Trigger lewat OSC TIDAK butuh apa pun: parsernya ditulis sendiri.
+python-rtmidi

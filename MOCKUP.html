@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>CUEVO Lyrics — Mockup v0.4</title>
+<style>
+/* ================================================================
+   Bahasa visual: alat live production, bukan dashboard.
+   - Nilai abu bertingkat, bukan garis terang, untuk memisah area.
+   - Divider LEBIH GELAP dari panel (seam), bukan lebih terang.
+   - Satu-satunya warna jenuh = MERAH, dan artinya cuma satu: ON AIR.
+     Amber = standby/next. Tidak ada warna dekoratif.
+   - Radius 0–2px. Tanpa shadow, tanpa glow, tanpa gradient.
+   - Mono hanya untuk angka waktu (digit tidak goyang).
+   - Padat: baris 22-24px, teks 11.5-12px. Tombol besar HANYA untuk
+     aksi yang ditekan sambil live.
+   ================================================================ */
+:root{
+  --v0:#000;        /* canvas output */
+  --v1:#0e0e0f;     /* app bg */
+  --v2:#151517;     /* panel */
+  --v3:#1b1c1e;     /* raised / header strip */
+  --v4:#232427;     /* row hover, tombol */
+  --v5:#2e3033;     /* border tegas bila perlu */
+  --seam:#0a0a0b;   /* divider: lebih gelap dari panel */
+  --t1:#dcdde0;     /* teks utama */
+  --t2:#8d9096;     /* sekunder */
+  --t3:#5c5f65;     /* tersier */
+  --t4:#3c3e43;     /* nyaris hilang */
+  --live:#ff3b30;   /* ON AIR — satu-satunya merah */
+  --standby:#ffb020;/* NEXT / preview / offset aktif */
+  --mono:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:#08080a}
+body{
+  background:#08080a; color:var(--t1);
+  font:12px/1.4 -apple-system,"Segoe UI",system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
+  padding:64px 40px 120px; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto}
+
+/* ---------- dokumen ---------- */
+.doc-head{margin-bottom:64px}
+.doc-head .kicker{font:11px/1 var(--mono);color:var(--t3);letter-spacing:.02em}
+.doc-head h1{font-size:26px;font-weight:600;letter-spacing:-.02em;margin:14px 0 10px;color:#fff}
+.doc-head p{color:var(--t2);font-size:13px;line-height:1.6;max-width:64ch}
+.doc-head .facts{margin-top:22px;display:flex;gap:0;border-top:1px solid #1a1a1c;flex-wrap:wrap}
+.doc-head .facts div{padding:11px 26px 0 0;font:11px/1.5 var(--mono);color:var(--t3)}
+.doc-head .facts b{display:block;color:var(--t2);font-weight:400}
+
+.shot{margin-bottom:80px}
+.shot-head{display:flex;align-items:baseline;gap:14px;margin-bottom:5px}
+.shot-head .n{font:11px/1 var(--mono);color:var(--t4)}
+.shot-head h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.shot-sub{color:var(--t2);font-size:12.5px;line-height:1.55;max-width:70ch;margin-bottom:14px}
+.reqs{font:11px/1.7 var(--mono);color:var(--t4);margin-bottom:14px}
+.reqs em{font-style:normal;color:var(--standby)}
+
+/* ---------- window ---------- */
+.win{background:var(--v2);border:1px solid #000;border-radius:3px;overflow:hidden}
+
+/* status strip */
+.strip{display:flex;align-items:stretch;background:var(--v3);border-bottom:1px solid var(--seam);
+  font-size:11.5px;color:var(--t2)}
+.strip .cell{padding:7px 13px;border-right:1px solid var(--seam);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.strip .cell.grow{flex:1;border-right:0}
+.strip b{color:var(--t1);font-weight:500}
+.strip .num{font-family:var(--mono);color:var(--t1)}
+.onair{background:var(--live);color:#fff;font:600 11px/1 var(--mono);letter-spacing:.1em;
+  padding:0 12px;display:flex;align-items:center;border-right:1px solid #000}
+.offair{background:var(--v4);color:var(--t3);font:600 11px/1 var(--mono);letter-spacing:.1em;
+  padding:0 12px;display:flex;align-items:center;border-right:1px solid var(--seam)}
+
+/* tabs */
+.tabs{display:flex;background:var(--v3);border-bottom:1px solid var(--seam)}
+.tab{padding:8px 15px;font-size:12px;color:var(--t3);border-right:1px solid var(--seam)}
+.tab.on{background:var(--v2);color:var(--t1);box-shadow:inset 0 -1px 0 var(--v2)}
+
+/* kolom */
+.cols{display:grid}
+.col{border-right:1px solid var(--seam);display:flex;flex-direction:column;min-width:0}
+.col:last-child{border-right:0}
+.ch{padding:6px 12px;font-size:11px;color:var(--t3);background:var(--v3);
+  border-bottom:1px solid var(--seam);display:flex;justify-content:space-between;gap:8px}
+.ch b{color:var(--t2);font-weight:500;font-family:var(--mono)}
+.foot{margin-top:auto;padding:7px 12px;background:var(--v3);border-top:1px solid var(--seam);
+  display:flex;gap:6px;align-items:center;font-size:11px;color:var(--t3);flex-wrap:wrap}
+
+/* baris daftar — padat */
+.row{display:flex;align-items:center;gap:8px;padding:0 12px;height:24px;font-size:12px;
+  color:var(--t2);border-left:2px solid transparent}
+.row .idx{width:14px;font:11px/1 var(--mono);color:var(--t4);flex:none;text-align:right}
+.row .grip{color:var(--t4);letter-spacing:-2.5px;flex:none;cursor:grab}
+.row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row.done{color:var(--t3)}
+.row.done .idx{color:var(--t4)}
+.row.done .nm::after{content:"·";margin-left:7px;color:var(--t4)}
+.row.live{background:var(--v4);color:#fff;border-left-color:var(--live)}
+.row.live .idx{color:var(--live)}
+
+/* baris lirik */
+.lyr{display:flex;gap:11px;padding:0 12px;height:23px;align-items:center;font-size:12px;color:var(--t2)}
+.lyr .tc{font:11px/1 var(--mono);color:var(--t4);width:58px;flex:none}
+.lyr.past{color:var(--t3)}
+.lyr.past .tc{color:var(--t4)}
+.lyr.live{background:var(--v4);color:#fff;font-weight:500}
+.lyr.live .tc{color:var(--live)}
+.lyr.next .tc{color:var(--standby)}
+
+/* preview */
+.pvwrap{padding:10px;background:var(--v1)}
+.pv{aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;overflow:hidden;background-color:#0b0b0c;
+  background-image:linear-gradient(45deg,#131314 25%,transparent 25%,transparent 75%,#131314 75%),
+                   linear-gradient(45deg,#131314 25%,transparent 25%,transparent 75%,#131314 75%);
+  background-size:14px 14px;background-position:0 0,7px 7px}
+.pl{text-align:center;white-space:nowrap;color:#fff;
+  text-shadow:0 0 2px #000,0 0 2px #000,1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
+.pl.cur{font-size:20px;font-weight:800;letter-spacing:.01em}
+.pl.n1{font-size:13px;font-weight:600;opacity:.5}
+.pl.n2{font-size:10.5px;font-weight:500;opacity:.19}
+.pvbar{display:flex;justify-content:space-between;padding:6px 12px;background:var(--v3);
+  border-top:1px solid var(--seam);font:11px/1 var(--mono);color:var(--t4)}
+
+/* next cue */
+.cue{padding:9px 12px;border-top:1px solid var(--seam);background:var(--v2)}
+.cue .k{font:11px/1 var(--mono);color:var(--standby);letter-spacing:.08em}
+.cue .v{font-size:14px;color:var(--t1);margin-top:5px;font-weight:500}
+
+/* transport */
+.tp{background:var(--v1);border-top:1px solid var(--seam)}
+.tprow{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--seam)}
+.tprow:last-child{border-bottom:0}
+.b{background:var(--v4);color:var(--t1);border:0;border-radius:2px;padding:5px 10px;font-size:11.5px;
+  white-space:nowrap;font-family:inherit}
+.b.q{background:transparent;color:var(--t2);box-shadow:inset 0 0 0 1px var(--v4)}
+.b.lg{padding:11px 20px;font-size:13px;font-weight:600;min-width:96px;text-align:center}
+.b.go{background:#e8e9eb;color:#0b0b0c}
+.b.kill{background:transparent;color:var(--live);box-shadow:inset 0 0 0 1px var(--live);font-weight:600}
+.b.on{background:var(--live);color:#fff}
+.seg{display:flex;border-radius:2px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--v4)}
+.seg span{padding:5px 11px;font-size:11.5px;color:var(--t3)}
+.seg span.on{background:var(--v4);color:var(--t1)}
+.lab{font-size:11px;color:var(--t3)}
+.hk{font:10.5px/1 var(--mono);color:var(--t4);margin-left:auto}
+.hk kbd{color:var(--t2);background:var(--v3);padding:2px 5px;border-radius:2px;margin:0 1px}
+.tc-big{font:13px/1 var(--mono);color:var(--t1);flex:none}
+.tc-dim{font:13px/1 var(--mono);color:var(--t3);flex:none}
+.scrub{flex:1;height:16px;position:relative;background:var(--v2);border-radius:1px;min-width:60px}
+.scrub i{position:absolute;inset:0 auto 0 0;background:var(--v4)}
+.scrub b{position:absolute;top:0;bottom:0;width:2px;background:var(--live)}
+.scrub s{position:absolute;top:0;bottom:0;width:1px;background:var(--t4);text-decoration:none}
+.offv{font:12px/1 var(--mono);color:var(--standby)}
+
+/* tabel */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 12px;font-size:11px;font-weight:400;color:var(--t3);
+  background:var(--v3);border-bottom:1px solid var(--seam)}
+td{padding:0 12px;height:26px;color:var(--t2);border-bottom:1px solid var(--seam)}
+tr.on td{background:var(--v4);color:var(--t1)}
+td.n{font-family:var(--mono);color:var(--t3);text-align:right;width:54px}
+.sync{color:var(--t1)}.sync::before{content:"●";color:#4ade80;font-size:8px;vertical-align:2px;margin-right:6px}
+.plain{color:var(--t3)}.plain::before{content:"○";font-size:8px;vertical-align:2px;margin-right:6px}
+
+/* input */
+.bar{display:flex;align-items:center;gap:7px;padding:8px 12px;border-bottom:1px solid var(--seam);
+  background:var(--v2);flex-wrap:wrap}
+.in{background:var(--v1);box-shadow:inset 0 0 0 1px var(--v4);border-radius:2px;padding:6px 10px;
+  font-size:12px;color:var(--t1);display:flex;align-items:center;gap:8px}
+.in .ph{color:var(--t4)}
+.in .hint{margin-left:auto;font:10.5px/1 var(--mono);color:var(--t4)}
+.rad{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--t3)}
+.rad::before{content:"";width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--t4)}
+.rad.on{color:var(--t1)}
+.rad.on::before{box-shadow:inset 0 0 0 1px var(--t2);background:radial-gradient(circle,var(--t1) 42%,transparent 44%)}
+.cb{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--t3)}
+.cb::before{content:"";width:11px;height:11px;border-radius:2px;box-shadow:inset 0 0 0 1px var(--t4)}
+.alert{padding:7px 12px;font-size:11.5px;color:var(--standby);background:rgba(255,176,32,.06);
+  border-top:1px solid var(--seam)}
+
+/* form style panel */
+.f{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:5px 12px;font-size:11.5px}
+.f > span:first-child{color:var(--t3)}
+.f .ctl{display:flex;align-items:center;gap:10px}
+.grp{padding:12px 12px 5px;font-size:11px;color:var(--t3);border-top:1px solid var(--seam);margin-top:7px}
+.sldr{flex:1;height:14px;position:relative;background:var(--v1);border-radius:1px;box-shadow:inset 0 0 0 1px var(--v4)}
+.sldr i{position:absolute;inset:1px auto 1px 1px;background:var(--v5)}
+.sldr b{position:absolute;top:-1px;bottom:-1px;width:3px;background:var(--t1)}
+.num{font:11.5px/1 var(--mono);color:var(--t1);width:52px;text-align:right;flex:none}
+.chip{background:var(--v1);box-shadow:inset 0 0 0 1px var(--v4);border-radius:2px;padding:5px 9px;
+  font-size:11.5px;color:var(--t1);display:flex;justify-content:space-between;gap:9px;align-items:center}
+.chip::after{content:"▾";color:var(--t4);font-size:9px}
+.swatch{width:16px;height:16px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);flex:none}
+.callout{margin:auto 12px 12px;padding:10px 11px;font-size:11.5px;line-height:1.6;color:var(--t2);
+  background:var(--v1);border-left:2px solid var(--standby)}
+.callout b{color:var(--t1);font-weight:600}
+
+/* editor */
+.paper{margin:10px 12px;padding:10px 12px;background:var(--v1);box-shadow:inset 0 0 0 1px var(--v4);
+  font-size:12px;color:var(--t2);line-height:1.95;min-height:170px}
+.ts{display:flex;gap:11px;padding:0 12px;height:23px;align-items:center;font-size:12px;color:var(--t2)}
+.ts .tc{font:11px/1 var(--mono);color:var(--t2);width:58px;flex:none}
+.ts.empty{color:var(--t3)}.ts.empty .tc{color:var(--t4)}
+.ts.live{background:var(--v4);color:#fff;font-weight:500}
+.ts.armed{color:var(--standby)}.ts.armed .tc{color:var(--standby)}
+.tapbtn{margin:8px 12px 12px;padding:15px;text-align:center;font-size:13px;font-weight:600;
+  letter-spacing:.02em;color:#0b0b0c;background:#e8e9eb;border-radius:2px}
+
+/* operator */
+.op{padding:30px 32px;background:#000}
+.opk{font:11px/1 var(--mono);color:var(--t3);letter-spacing:.14em}
+.opnow{font-size:40px;font-weight:800;letter-spacing:-.02em;color:#fff;margin-top:9px;line-height:1.05}
+.opnext{font-size:23px;font-weight:600;color:var(--standby);margin-top:8px}
+.opbar{display:flex;gap:24px;align-items:center;margin-top:32px;padding-top:14px;
+  border-top:1px solid #191919;font:11.5px/1 var(--mono);color:var(--t3);flex-wrap:wrap}
+.opbar .r{color:var(--live);font-weight:700;letter-spacing:.12em}
+
+/* verdict — tipografi polos, tanpa kartu */
+.verdict{border-top:1px solid #1a1a1c;padding-top:32px}
+.verdict h2{font-size:15px;font-weight:600;margin-bottom:10px}
+.verdict > p{color:var(--t2);font-size:12.5px;line-height:1.7;max-width:72ch}
+.vrow{display:grid;grid-template-columns:132px 1fr;gap:20px;padding:16px 0;border-top:1px solid #151517}
+.vrow .k{font:11px/1.5 var(--mono)}
+.vrow .k .s{display:block;font-size:13px;font-family:inherit;font-weight:600;color:var(--t1);margin-top:4px;letter-spacing:-.01em}
+.vrow p{color:var(--t2);font-size:12.5px;line-height:1.7}
+.vrow p b{color:var(--t1);font-weight:600}
+.pick .k{color:#4ade80}.mid .k{color:var(--standby)}.no .k{color:var(--live)}
+@media(max-width:920px){.vrow{grid-template-columns:1fr;gap:6px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc-head">
+  <div class="kicker">MOCKUP v0.4 — direvisi dari SRS.md</div>
+  <h1>CUEVO Lyrics</h1>
+  <p>Alat lirik live untuk Resolume Arena. Enam layar, semuanya diturunkan dari SRS.
+     Bahasa visualnya mengikuti konvensi alat live production — bukan dashboard: padat,
+     nyaris tanpa warna, dan <b style="color:var(--t1);font-weight:500">merah hanya berarti satu hal: sedang tayang</b>.</p>
+  <div class="facts">
+    <div><b>WINDOW</b>1280×800 min</div>
+    <div><b>PLATFORM</b>Windows 10/11</div>
+    <div><b>OUTPUT</b>Spout RGBA 1920×1080 @30</div>
+    <div><b>KONDISI PAKAI</b>venue gelap, sekali lirik</div>
+  </div>
+</header>
+
+<!-- ============ 01 LIVE ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">01</span><h2>Live</h2></div>
+  <p class="shot-sub">Layar yang dipelototi 95% durasi show. Tiga kolom dengan tugas berbeda:
+     apa selanjutnya (set list) · di mana kita sekarang (lirik) · apa yang penonton lihat (preview).</p>
+  <div class="reqs">REQ-F-SET-02/03/05 · REQ-F-PLAY-01…06 · REQ-F-OPS-01/02 · REQ-F-OUT-04</div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="onair">ON AIR</span>
+      <span class="cell">CUEVO Lyrics <b>1920×1080</b></span>
+      <span class="cell">29.4<span style="color:var(--t3)">/30 fps</span></span>
+      <span class="cell grow">The Chain — Fleetwood Mac</span>
+      <span class="cell">Show <b>3</b><span style="color:var(--t3)">/8</span></span>
+    </div>
+    <div class="tabs">
+      <span class="tab on">Live</span><span class="tab">Library</span>
+      <span class="tab">Show</span><span class="tab">Style</span><span class="tab">Settings</span>
+    </div>
+
+    <div class="cols" style="grid-template-columns:216px 1fr 340px">
+      <div class="col">
+        <div class="ch"><span>Set list</span><b>3/8</b></div>
+        <div class="row done"><span class="grip">⣿</span><span class="idx">1</span><span class="nm">Opening</span></div>
+        <div class="row done"><span class="grip">⣿</span><span class="idx">2</span><span class="nm">Great Are You Lord</span></div>
+        <div class="row live"><span class="grip">⣿</span><span class="idx">3</span><span class="nm">The Chain</span></div>
+        <div class="row"><span class="grip">⣿</span><span class="idx">4</span><span class="nm">Oceans</span></div>
+        <div class="row"><span class="grip">⣿</span><span class="idx">5</span><span class="nm">Build My Life</span></div>
+        <div class="row"><span class="grip">⣿</span><span class="idx">6</span><span class="nm">Way Maker</span></div>
+        <div class="row"><span class="grip">⣿</span><span class="idx">7</span><span class="nm">Goodness of God</span></div>
+        <div class="row"><span class="grip">⣿</span><span class="idx">8</span><span class="nm">Closing</span></div>
+        <div class="foot"><span class="b q">Tambah</span><span class="b q">Simpan show</span></div>
+      </div>
+
+      <div class="col">
+        <div class="ch"><span>Lirik</span><b>142 baris</b></div>
+        <div class="lyr past"><span class="tc">00:20.55</span><span>Chain, keep us together</span></div>
+        <div class="lyr past"><span class="tc">00:24.10</span><span>Listen to the wind blow</span></div>
+        <div class="lyr past"><span class="tc">00:27.93</span><span>Watch the sun rise</span></div>
+        <div class="lyr live"><span class="tc">00:30.88</span><span>Run in the shadows</span></div>
+        <div class="lyr next"><span class="tc">00:34.02</span><span>Damn your love</span></div>
+        <div class="lyr"><span class="tc">00:36.55</span><span>Damn your lies</span></div>
+        <div class="lyr"><span class="tc">00:39.11</span><span>And if you don't love me now</span></div>
+        <div class="lyr"><span class="tc">00:42.70</span><span>You will never love me again</span></div>
+        <div class="lyr"><span class="tc">00:45.33</span><span>I can still hear you saying</span></div>
+        <div class="lyr"><span class="tc">00:47.90</span><span>You would never break the chain</span></div>
+        <div class="lyr"><span class="tc">00:51.20</span><span>Chain, keep us together</span></div>
+        <div class="foot">klik baris = lompat ke waktu itu · auto-scroll mengikuti baris aktif</div>
+      </div>
+
+      <div class="col">
+        <div class="ch"><span>Program</span><b>PGM</b></div>
+        <div class="pvwrap">
+          <div class="pv">
+            <div class="pl n2">chain, keep us together</div>
+            <div class="pl n1">watch the sun rise</div>
+            <div class="pl cur">Run in the shadows</div>
+            <div class="pl n1">damn your love</div>
+            <div class="pl n2">damn your lies</div>
+          </div>
+        </div>
+        <div class="pvbar"><span>frame identik ke Resolume</span><span>alpha = kotak-kotak</span></div>
+        <div class="cue"><div class="k">NEXT</div><div class="v">Damn your love</div></div>
+      </div>
+    </div>
+
+    <div class="tp">
+      <div class="tprow">
+        <span class="lab">Mode</span>
+        <span class="seg"><span class="on">Auto-timestamp</span><span>Manual per-baris</span></span>
+        <span class="lab" style="margin-left:14px">Offset</span><span class="offv">+0.30s</span>
+        <span class="b q">−0.5</span><span class="b q">−0.1</span><span class="b q">+0.1</span><span class="b q">+0.5</span>
+        <span class="hk"><kbd>Space</kbd> play &nbsp;<kbd>←</kbd><kbd>→</kbd> baris &nbsp;<kbd>B</kbd> blank</span>
+      </div>
+      <div class="tprow">
+        <span class="b lg">◀ Prev</span>
+        <span class="b lg go">Play</span>
+        <span class="b lg">Pause</span>
+        <span class="b lg">Next ▶</span>
+        <span style="flex:1"></span>
+        <span class="b lg kill">BLANK</span>
+      </div>
+      <div class="tprow">
+        <span class="tc-big">00:31.42</span>
+        <span class="scrub"><i style="width:11.6%"></i><s style="left:7.5%"></s><s style="left:9.3%"></s><s style="left:11.6%"></s><s style="left:12.5%"></s><s style="left:13.5%"></s><b style="left:11.6%"></b></span>
+        <span class="tc-dim">04:31.00</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02 LIBRARY ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">02</span><h2>Library</h2></div>
+  <p class="shot-sub">Satu kolom pencarian saja — ketik judul, artis, atau keduanya dengan urutan bebas.
+     Operator tidak perlu tahu mana yang mana.</p>
+  <div class="reqs">REQ-F-LIB-01/02 · <em>REQ-F-LIB-04/06/07 baru</em> · REQ-NF-03 offline-safe</div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="onair">ON AIR</span>
+      <span class="cell">CUEVO Lyrics <b>1920×1080</b></span>
+      <span class="cell grow">output tetap jalan saat kamu mencari</span>
+      <span class="cell">Show <b>3</b><span style="color:var(--t3)">/8</span></span>
+    </div>
+    <div class="tabs">
+      <span class="tab">Live</span><span class="tab on">Library</span>
+      <span class="tab">Show</span><span class="tab">Style</span><span class="tab">Settings</span>
+    </div>
+
+    <div class="bar">
+      <span class="rad on">LRCLIB</span><span class="rad">Library lokal <span style="color:var(--t4)">142</span></span>
+      <span style="flex:1"></span>
+      <span class="b q">Import .lrc</span><span class="b q">Lagu manual</span>
+    </div>
+    <div class="bar">
+      <span class="in" style="flex:1;padding:8px 11px">
+        <span style="color:var(--t4)">⌕</span>
+        <span>fleetwood mac the chain</span>
+        <span class="hint">judul · artis · keduanya</span>
+      </span>
+      <span class="b" style="padding:8px 16px">Cari</span>
+    </div>
+
+    <table>
+      <thead><tr><th>Judul</th><th>Artis</th><th>Album</th><th class="n" style="text-align:right">Durasi</th><th style="width:110px">Lirik</th></tr></thead>
+      <tbody>
+        <tr class="on"><td>The Chain</td><td>Fleetwood Mac</td><td>Rumours</td><td class="n">4:31</td><td class="sync">synced</td></tr>
+        <tr><td>The Chain</td><td>Fleetwood Mac</td><td>Live in Boston</td><td class="n">5:12</td><td class="plain">plain</td></tr>
+        <tr><td>The Chain — Remaster</td><td>Fleetwood Mac</td><td>Rumours 2004</td><td class="n">4:29</td><td class="sync">synced</td></tr>
+        <tr><td>Chain Of Fools</td><td>Aretha Franklin</td><td>Lady Soul</td><td class="n">2:47</td><td class="sync">synced</td></tr>
+        <tr><td>Unbreak My Heart</td><td>Toni Braxton</td><td>Secrets</td><td class="n">4:29</td><td class="plain">plain</td></tr>
+      </tbody>
+    </table>
+
+    <div class="bar" style="border-bottom:0;border-top:1px solid var(--seam)">
+      <span class="b">Muat ke player</span><span class="b q">Simpan ke library</span>
+      <span class="b q">Tambah ke show</span><span class="b q">Edit lirik</span>
+    </div>
+    <div class="alert">LRCLIB tidak terjangkau — library lokal tetap bisa dipakai penuh. (REQ-NF-03)</div>
+  </div>
+</section>
+
+<!-- ============ 03 EDITOR ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">03</span><h2>Editor lirik manual</h2></div>
+  <p class="shot-sub">Untuk lagu yang tidak ada di LRCLIB. Putar lagunya, tekan Enter tiap baris ganti.
+     Satu tombol, satu tugas — sisanya tinggal ikut irama.</p>
+  <div class="reqs"><em>REQ-F-LIB-03 · Must · belum ada sama sekali</em> · REQ-F-LIB-05</div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="offair">EDIT</span>
+      <span class="cell grow">Lagu Tanpa Judul <span style="color:var(--t3)">— belum disimpan</span></span>
+      <span class="cell">3<span style="color:var(--t3)">/6 baris ditandai</span></span>
+      <span class="cell"><span class="b q">Batal</span><span class="b">Simpan</span></span>
+    </div>
+    <div class="bar">
+      <span class="lab">Judul</span><span class="in" style="width:210px">Lagu Tanpa Judul</span>
+      <span class="lab">Artis</span><span class="in" style="width:170px"><span class="ph">opsional</span></span>
+      <span class="lab">Durasi</span><span class="in" style="width:76px;font-family:var(--mono)">03:20</span>
+    </div>
+
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <div class="col">
+        <div class="ch"><span>Teks mentah</span><b>6</b></div>
+        <div class="paper">
+          Aku berdiri di sini<br>Menatap langit yang sama<br>Tak ada yang berubah<br>
+          Selain aku<br>Selain caraku memandangmu<br>Dan waktu terus berjalan
+        </div>
+        <div class="foot"><span class="b q">Pecah jadi baris</span></div>
+      </div>
+      <div class="col">
+        <div class="ch"><span>Hasil</span><b>3/6</b></div>
+        <div class="ts"><span class="tc">00:12.40</span><span>Aku berdiri di sini</span></div>
+        <div class="ts"><span class="tc">00:16.10</span><span>Menatap langit yang sama</span></div>
+        <div class="ts live"><span class="tc">00:20.55</span><span>Tak ada yang berubah</span></div>
+        <div class="ts armed"><span class="tc">— siap —</span><span>Selain aku</span></div>
+        <div class="ts empty"><span class="tc">··:··</span><span>Selain caraku memandangmu</span></div>
+        <div class="ts empty"><span class="tc">··:··</span><span>Dan waktu terus berjalan</span></div>
+        <div class="foot"><span class="b q">Hapus tanda</span><span class="b q">Geser semua −1s</span><span class="b q">+1s</span></div>
+      </div>
+    </div>
+
+    <div class="tp">
+      <div class="tprow">
+        <span class="b lg go">Play</span><span class="b lg">Pause</span>
+        <span class="tc-big">00:20.55</span>
+        <span class="scrub"><i style="width:31%"></i><b style="left:31%"></b></span>
+        <span class="tc-dim">03:20.00</span>
+      </div>
+      <div class="tapbtn">TANDAI BARIS BERIKUTNYA &nbsp;·&nbsp; Enter</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 STYLE ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">04</span><h2>Style</h2></div>
+  <p class="shot-sub">Panel paling berat secara teknis. Setiap geseran harus terlihat di preview
+     <i>dan</i> di Resolume dalam &lt;100ms — karena kamu akan menyetelnya saat lagu sedang jalan.</p>
+  <div class="reqs"><em>REQ-F-STYLE-01/02/03 · REQ-F-OUT-05</em> · REQ-NF-02 · Template §5.3</div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="onair">ON AIR</span>
+      <span class="cell grow">perubahan style langsung tayang — tidak ada tombol apply</span>
+      <span class="cell">Default White Outline</span>
+    </div>
+    <div class="tabs">
+      <span class="tab">Live</span><span class="tab">Library</span>
+      <span class="tab">Show</span><span class="tab on">Style</span><span class="tab">Settings</span>
+    </div>
+
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <div class="col">
+        <div class="ch"><span>Template</span><b>tersimpan</b></div>
+        <div class="bar">
+          <span class="chip" style="flex:1">Default White Outline</span>
+          <span class="b q">Simpan</span><span class="b q">Duplikat</span><span class="b q">Hapus</span>
+        </div>
+
+        <div class="f"><span>Layout</span><span class="ctl">
+          <span class="rad on">Scroll multiline</span><span class="rad">Single line</span></span></div>
+        <div class="f"><span>Font</span><span class="ctl"><span class="chip" style="flex:1">Inter Bold</span></span></div>
+        <div class="f"><span>Ukuran</span><span class="ctl">
+          <span class="sldr"><i style="width:42%"></i><b style="left:42%"></b></span><span class="num">64 px</span></span></div>
+        <div class="f"><span>Warna teks</span><span class="ctl">
+          <span class="swatch" style="background:#fff"></span><span class="num" style="text-align:left">#FFFFFF</span></span></div>
+        <div class="f"><span>Outline</span><span class="ctl">
+          <span class="swatch" style="background:#000"></span><span class="num" style="text-align:left">#000000</span>
+          <span class="sldr"><i style="width:18%"></i><b style="left:18%"></b></span><span class="num">3 px</span></span></div>
+
+        <div class="grp">Scroll — REQ-F-OUT-05</div>
+        <div class="f"><span>Baris konteks</span><span class="ctl">
+          <span class="chip" style="width:104px">2 sebelum</span><span class="chip" style="width:104px">2 sesudah</span></span></div>
+        <div class="f"><span>Jarak baris</span><span class="ctl">
+          <span class="sldr"><i style="width:55%"></i><b style="left:55%"></b></span><span class="num">1.55×</span></span></div>
+        <div class="f"><span>Size falloff</span><span class="ctl">
+          <span class="sldr"><i style="width:22%"></i><b style="left:22%"></b></span><span class="num">0.22</span></span></div>
+        <div class="f"><span>Opacity falloff</span><span class="ctl">
+          <span class="sldr"><i style="width:32%"></i><b style="left:32%"></b></span><span class="num">0.32</span></span></div>
+        <div class="f"><span>Edge fade</span><span class="ctl">
+          <span class="sldr"><i style="width:18%"></i><b style="left:18%"></b></span><span class="num">0.18</span></span></div>
+        <div class="f"><span>Transisi</span><span class="ctl">
+          <span class="sldr"><i style="width:55%"></i><b style="left:55%"></b></span><span class="num">550 ms</span></span></div>
+        <div class="f" style="padding-bottom:12px"><span>Anchor Y</span><span class="ctl">
+          <span class="sldr"><i style="width:50%"></i><b style="left:50%"></b></span><span class="num">0.50</span></span></div>
+      </div>
+
+      <div class="col">
+        <div class="ch"><span>Program</span><b>1920×1080 → skala</b></div>
+        <div class="pvwrap" style="padding:12px">
+          <div class="pv">
+            <div class="pl n2">chain, keep us together</div>
+            <div class="pl n1">watch the sun rise</div>
+            <div class="pl cur" style="font-size:25px">Run in the shadows</div>
+            <div class="pl n1">damn your love</div>
+            <div class="pl n2">damn your lies</div>
+          </div>
+        </div>
+        <div class="bar" style="border-bottom:0;justify-content:center;background:var(--v1)">
+          <span class="b q">Putar animasi transisi</span><span class="b q">Reset ke preset</span>
+        </div>
+        <div class="callout">
+          <b>Widget penentu pemilihan stack.</b> Kotak di atas bukan tiruan CSS — ia harus menampilkan
+          buffer RGBA yang <b>sama persis</b> dengan yang dikirim ke Spout, 30 fps, lengkap dengan
+          animasi transisinya. Kalau preview dan output berbeda sedikit saja, panel ini tidak ada gunanya.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 SETTINGS ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">05</span><h2>Settings</h2></div>
+  <p class="shot-sub">Disetel sekali, tidak disentuh lagi saat show.</p>
+  <div class="reqs"><em>REQ-F-CFG-01/02</em> · REQ-F-PLAY-07 · REQ-F-RC-01/02</div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="offair">IDLE</span>
+      <span class="cell grow">Settings</span>
+    </div>
+    <div class="tabs">
+      <span class="tab">Live</span><span class="tab">Library</span>
+      <span class="tab">Show</span><span class="tab">Style</span><span class="tab on">Settings</span>
+    </div>
+
+    <div class="grp" style="border-top:0;margin-top:0">Output</div>
+    <div class="f"><span>Sender name</span><span class="ctl">
+      <span class="in" style="width:190px">CUEVO Lyrics</span>
+      <span style="color:var(--t2);font-size:11.5px">Resolume mendeteksi sender ini</span></span></div>
+    <div class="f"><span>Resolusi</span><span class="ctl">
+      <span class="in" style="width:74px;font-family:var(--mono)">1920</span><span style="color:var(--t4)">×</span>
+      <span class="in" style="width:74px;font-family:var(--mono)">1080</span>
+      <span class="lab" style="margin-left:12px">FPS</span><span class="chip" style="width:70px">30</span></span></div>
+
+    <div class="grp">Penyimpanan</div>
+    <div class="f"><span>Library</span><span class="ctl">
+      <span class="in" style="flex:1;font-family:var(--mono);font-size:11px;color:var(--t2)">C:\Users\gevan\AppData\Roaming\CUEVO Lyrics\library.json</span>
+      <span class="b q">Ubah</span></span></div>
+    <div class="f"><span>Shows</span><span class="ctl">
+      <span class="in" style="flex:1;font-family:var(--mono);font-size:11px;color:var(--t2)">C:\Users\gevan\AppData\Roaming\CUEVO Lyrics\shows\</span>
+      <span class="b q">Ubah</span></span></div>
+
+    <div class="grp">Hotkey</div>
+    <div class="f"><span>Binding</span><span class="ctl" style="gap:16px;font-size:11.5px;color:var(--t2);flex-wrap:wrap">
+      <span>Play/Pause <kbd style="font:10.5px var(--mono);background:var(--v3);padding:2px 5px;border-radius:2px">Space</kbd></span>
+      <span>Next <kbd style="font:10.5px var(--mono);background:var(--v3);padding:2px 5px;border-radius:2px">→</kbd></span>
+      <span>Prev <kbd style="font:10.5px var(--mono);background:var(--v3);padding:2px 5px;border-radius:2px">←</kbd></span>
+      <span>Blank <kbd style="font:10.5px var(--mono);background:var(--v3);padding:2px 5px;border-radius:2px">B</kbd></span>
+    </span></div>
+    <div class="f"><span></span><span class="ctl">
+      <span class="cb">Aktif walau window lain sedang fokus</span>
+      <span style="font:10.5px var(--mono);color:var(--t4)">COULD</span></span></div>
+
+    <div class="grp">Remote</div>
+    <div class="f" style="padding-bottom:14px"><span></span><span class="ctl" style="gap:18px;flex-wrap:wrap">
+      <span class="cb">OSC</span><span class="lab">port</span>
+      <span class="in" style="width:70px;font-family:var(--mono)">8000</span>
+      <span class="cb">MIDI</span><span class="chip" style="width:170px">tidak ada device</span>
+      <span style="font:10.5px var(--mono);color:var(--t4)">FASE 5</span></span></div>
+  </div>
+</section>
+
+<!-- ============ 06 OPERATOR ============ -->
+<section class="shot">
+  <div class="shot-head"><span class="n">06</span><h2>Operator display</h2></div>
+  <p class="shot-sub">Window kedua di monitor terpisah. Dibaca dari jarak 1–2 meter, sambil melakukan hal lain.
+     Cuma dua informasi yang penting: yang sedang tayang, dan yang berikutnya.</p>
+  <div class="reqs"><em>REQ-F-OPS-01/02</em></div>
+
+  <div class="win">
+    <div class="strip">
+      <span class="onair">ON AIR</span>
+      <span class="cell grow">Operator display — monitor 2</span>
+      <span class="cell"><span class="b q">Full screen</span></span>
+    </div>
+    <div class="op">
+      <div class="opk">NOW</div>
+      <div class="opnow">Run in the shadows</div>
+      <div class="opk" style="margin-top:28px">NEXT</div>
+      <div class="opnext">Damn your love</div>
+      <div class="opbar">
+        <span>3/8 · THE CHAIN</span><span>00:31 / 04:31</span>
+        <span>AUTO</span><span style="color:var(--standby)">OFFSET +0.30</span>
+        <span class="r">● PROGRAM</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VERDICT ============ -->
+<section class="verdict">
+  <h2>Verdict stack</h2>
+  <p>Semua widget di enam layar ini tersedia built-in di ketiga kandidat — kecuali satu.
+     Preview di layar 01 dan 04 harus menampilkan <b style="color:var(--t1)">buffer RGBA yang sama persis
+     dengan yang dikirim ke Spout, 30 fps</b>. Itu satu-satunya requirement yang benar-benar
+     membedakan ketiganya.</p>
+
+  <div class="vrow pick">
+    <div class="k">PILIH<span class="s">PySide6 / Qt</span></div>
+    <p><code>PIL.Image</code> → <code>QImage</code> → <code>QLabel</code>: satu proses, memori yang sama,
+       sekitar sepuluh baris. Drag-reorder, color picker, font picker, window monitor kedua — semua bawaan.
+       <b>player_state, lrc_parser, dan lrclib_client tidak disentuh sama sekali.</b></p>
+  </div>
+  <div class="vrow mid">
+    <div class="k">CADANGAN<span class="s">C# WPF / Avalonia</span></div>
+    <p>Secara arsitektur paling benar: satu GPU surface melayani preview <i>dan</i> Spout sekaligus,
+       jadi "frame identik" bukan janji melainkan konsekuensi struktural. Tapi kamu membuang empat modul
+       yang sudah teruji demi masalah yang belum terbukti ada. <b>Pindah ke sini hanya kalau Pillow
+       terbukti drop frame di Windows.</b></p>
+  </div>
+  <div class="vrow no">
+    <div class="k">TOLAK<span class="s">Tauri</span></div>
+    <p>Kalah dua arah. UI → Spout: surface WebView2 tidak bisa di-capture jadi texture, jadi tampilan
+       HTML tidak bisa jadi output. Renderer → UI: tiap frame harus di-encode dan lewat IPC, 30× per detik.
+       <b>Kamu tetap harus menulis renderer terpisah, plus membayar overhead</b> — tanpa satu pun
+       keunggulan web menyentuh bagian yang sulit.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

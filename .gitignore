@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+*.spec
+
+# Data & cache aplikasi -- ini semua hidup di %APPDATA%\CUEVO Lyrics\ saat
+# runtime, TIDAK PERNAH di dalam folder project. Baris di bawah cuma jaga-jaga
+# kalau ada yang menjalankan dari sini secara manual dan file itu tercipta
+# di tempat yang salah.
+library.json
+settings.json
+fonts.json
+shows/
+*.showproject.json
+
+# Scratch / eksperimen lokal yang belum tentu mau di-commit
+scratch/
+*.local.py
