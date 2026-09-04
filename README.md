@@ -17,6 +17,12 @@ show is live.
     ->  [SpoutGL]  ->  [Resolume Arena: Sources > Spout]
 ```
 
+![The Live tab, running](docs/screenshots/tab-live.png)
+
+*The Live tab during a show. Set list on the left, the full lyric sheet in the
+middle, and on the right a preview of the exact frame Resolume is receiving.
+The strip reads ON AIR at 29.7 fps, which is measured rather than decorative.*
+
 ## Download
 
 Grab the latest build from the [Releases page](https://github.com/mochaheree/cuevo-lyrics/releases).
@@ -118,6 +124,15 @@ your library and shows live, and the shortcut list. It saves as soon as you
 leave a field.
 
 **Donate** has the Saweria link, a QRIS code, and contact links.
+
+### Screenshots
+
+| | |
+|---|---|
+| ![Style](docs/screenshots/tab-style.png) | ![Library](docs/screenshots/tab-library.png) |
+| **Style.** Every visual parameter, live as you drag. | **Library.** One search box for title, artist, or both. |
+| ![Operator Display](docs/screenshots/operator.png) | ![Cast](docs/screenshots/cast.png) |
+| **Operator Display.** NOW and NEXT for a second monitor. | **Cast.** Chroma green for OBS and TikTok, with the alpha warning showing. |
 
 ## Casting to OBS, TikTok Live, or a second screen
 
@@ -234,6 +249,11 @@ and the Style panel warns you when a setting is about to cross it.
   hardware yet. See SRS section 3.13 for exactly what is unverified.
 - No audio analysis. Sync is manual by design.
 - Spout output is Windows only.
+
+## Slides
+
+There is a deck covering the same ground in [docs/](docs/), as both
+`CUEVO Lyrics.pdf` and an editable `CUEVO Lyrics.pptx`.
 
 ## Licence
 
