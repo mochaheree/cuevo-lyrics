@@ -250,10 +250,14 @@ and the Style panel warns you when a setting is about to cross it.
 - No audio analysis. Sync is manual by design.
 - Spout output is Windows only.
 
-## Slides
+## Slides and tutorial
 
-There is a deck covering the same ground in [docs/](docs/), as both
+[docs/](docs/) has a deck covering the same ground, as both
 `CUEVO Lyrics.pdf` and an editable `CUEVO Lyrics.pptx`.
+
+There is also [`CUEVO Lyrics - Tutorial.pdf`](docs/CUEVO%20Lyrics%20-%20Tutorial.pdf),
+a step-by-step walkthrough in English and Indonesian, screenshots included,
+covering installation through to sending output to OBS or TikTok Live.
 
 ## Licence
 
