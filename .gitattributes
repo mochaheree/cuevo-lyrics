@@ -1,0 +1,13 @@
+# Normalkan akhir baris file teks, tapi JANGAN sentuh file biner.
+# Tanpa ini git mengandalkan tebakan isi file, dan sekali saja tebakan itu
+# meleset, PDF atau PNG-nya rusak di clone orang lain tanpa ada yang sadar
+# sampai file itu dibuka.
+* text=auto
+
+*.pdf   binary
+*.pptx  binary
+*.png   binary
+*.ico   binary
+*.zip   binary
+*.exe   binary
+*.lrc   text
