@@ -54,7 +54,7 @@ class LyricEditor(QDialog):
         self._lines = list(song.lines) if song else []   # [(time|None, text)]
         self._entries = []                                # [[time_or_None, text]]
 
-        self.setWindowTitle("Editor lirik")
+        self.setWindowTitle("Lyric editor")
         self.setModal(True)
         self.resize(1000, 660)
         self.setStyleSheet(theme.stylesheet())
@@ -94,20 +94,20 @@ class LyricEditor(QDialog):
         )
         box.addWidget(tag)
 
-        self.progress_label = QLabel("0/0 baris ditandai")
+        self.progress_label = QLabel("0/0 lines timed")
         theme.paint(self.progress_label,
             f"color:{theme.T2};background:transparent;padding:9px 13px;"
         )
         box.addWidget(self.progress_label)
         box.addStretch(1)
 
-        export_btn = QPushButton("Ekspor .lrc")
+        export_btn = QPushButton("Export .lrc")
         export_btn.setProperty("variant", "quiet")
         export_btn.clicked.connect(self.export_lrc)
-        cancel_btn = QPushButton("Batal")
+        cancel_btn = QPushButton("Cancel")
         cancel_btn.setProperty("variant", "quiet")
         cancel_btn.clicked.connect(self.reject)
-        save_btn = QPushButton("Simpan ke library")
+        save_btn = QPushButton("Save to library")
         save_btn.clicked.connect(self.save)
 
         wrap = QWidget()
@@ -127,18 +127,18 @@ class LyricEditor(QDialog):
         box.setSpacing(7)
 
         self.title_input = QLineEdit()
-        self.title_input.setPlaceholderText("judul lagu")
+        self.title_input.setPlaceholderText("song title")
         self.title_input.setMinimumWidth(210)
         self.artist_input = QLineEdit()
-        self.artist_input.setPlaceholderText("artis (opsional)")
+        self.artist_input.setPlaceholderText("artist (optional)")
         self.artist_input.setMinimumWidth(170)
         self.duration_input = QLineEdit("03:20")
         self.duration_input.setFixedWidth(78)
         self.duration_input.editingFinished.connect(self._apply_duration)
 
-        for label, widget in (("Judul", self.title_input),
-                              ("Artis", self.artist_input),
-                              ("Durasi", self.duration_input)):
+        for label, widget in (("Title", self.title_input),
+                              ("Artist", self.artist_input),
+                              ("Duration", self.duration_input)):
             text = QLabel(label)
             text.setStyleSheet(f"color:{theme.T3};font-size:11px;")
             box.addWidget(text)
@@ -184,13 +184,13 @@ class LyricEditor(QDialog):
         box = QVBoxLayout(col)
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(0)
-        head, self.raw_count_label = self._column_head("Teks mentah", "0")
+        head, self.raw_count_label = self._column_head("Raw text", "0")
         box.addWidget(head)
 
         self.raw_text = QPlainTextEdit()
         self.raw_text.setPlaceholderText(
-            "Tempel lirik di sini, satu baris per baris nyanyian.\n\n"
-            "Lalu tekan “Pecah jadi baris”."
+            "Paste lyrics here, one line per sung line.\n\n"
+            "Then press “Split into lines”."
         )
         theme.paint(self.raw_text,
             f"background:{theme.V1};color:{theme.T2};border:1px solid {theme.V4};"
@@ -207,7 +207,7 @@ class LyricEditor(QDialog):
         theme.paint(foot,f"background:{theme.V3};border-top:1px solid {theme.SEAM};")
         fb = QHBoxLayout(foot)
         fb.setContentsMargins(12, 7, 12, 7)
-        split_btn = QPushButton("Pecah jadi baris")
+        split_btn = QPushButton("Split into lines")
         split_btn.setProperty("variant", "quiet")
         split_btn.clicked.connect(self.split_lines)
         fb.addWidget(split_btn)
@@ -220,7 +220,7 @@ class LyricEditor(QDialog):
         box = QVBoxLayout(col)
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(0)
-        head, self.result_count_label = self._column_head("Hasil", "0/0")
+        head, self.result_count_label = self._column_head("Result", "0/0")
         box.addWidget(head)
 
         self.entry_list = QListWidget()
@@ -234,14 +234,14 @@ class LyricEditor(QDialog):
         fb.setContentsMargins(12, 7, 12, 7)
         fb.setSpacing(6)
 
-        clear_btn = QPushButton("Hapus tanda")
+        clear_btn = QPushButton("Clear mark")
         clear_btn.setProperty("variant", "quiet")
-        clear_btn.setToolTip("Hapus timestamp baris yang dipilih")
+        clear_btn.setToolTip("Remove the timestamp from the selected line")
         clear_btn.clicked.connect(self.clear_selected_mark)
         fb.addWidget(clear_btn)
 
         # REQ-F-LIB-05 -- geser semua timestamp sekaligus
-        shift_label = QLabel("Geser semua")
+        shift_label = QLabel("Shift all")
         shift_label.setStyleSheet(f"color:{theme.T3};font-size:11px;")
         self.shift_amount = QDoubleSpinBox()
         self.shift_amount.setRange(-60.0, 60.0)
@@ -281,7 +281,7 @@ class LyricEditor(QDialog):
         pause_btn = QPushButton("Pause")
         pause_btn.setProperty("variant", "transport")
         pause_btn.clicked.connect(self.clock.pause)
-        reset_btn = QPushButton("Ke awal")
+        reset_btn = QPushButton("To start")
         reset_btn.setProperty("variant", "quiet")
         reset_btn.clicked.connect(self.clock.stop)
 
@@ -299,7 +299,7 @@ class LyricEditor(QDialog):
         row.addWidget(self.dur_label)
         box.addLayout(row)
 
-        self.tap_btn = QPushButton("TANDAI BARIS BERIKUTNYA   ·   Enter")
+        self.tap_btn = QPushButton("MARK NEXT LINE   ·   Enter")
         theme.paint(self.tap_btn,
             f"background:#e8e9eb;color:#0b0b0c;font-size:13px;font-weight:700;"
             f"padding:15px;border-radius:2px;"
@@ -374,7 +374,7 @@ class LyricEditor(QDialog):
         for time_sec, text in self._entries:
             if time_sec is None:
                 if next_armed:
-                    item = QListWidgetItem(f"  — siap —   {text}")
+                    item = QListWidgetItem(f"  ready       {text}")
                     item.setForeground(QColor(theme.STANDBY))
                     next_armed = False
                 else:
@@ -390,11 +390,11 @@ class LyricEditor(QDialog):
 
         total = len(self._entries)
         self.result_count_label.setText(f"{marked}/{total}")
-        self.progress_label.setText(f"{marked}/{total} baris ditandai")
+        self.progress_label.setText(f"{marked}/{total} lines timed")
         self.tap_btn.setEnabled(marked < total or total == 0)
         self.tap_btn.setText(
-            "SEMUA BARIS SUDAH DITANDAI" if total and marked >= total
-            else "TANDAI BARIS BERIKUTNYA   ·   Enter"
+            "ALL LINES ARE TIMED" if total and marked >= total
+            else "MARK NEXT LINE   ·   Enter"
         )
 
     # ---------- simpan ----------
@@ -410,7 +410,7 @@ class LyricEditor(QDialog):
         duration = parse_duration(self.duration_input.text())
         if lines and duration <= lines[-1][0]:
             duration = lines[-1][0] + 5     # durasi tak boleh lebih pendek dari baris terakhir
-        title = self.title_input.text().strip() or "(tanpa judul)"
+        title = self.title_input.text().strip() or "(untitled)"
         artist = self.artist_input.text().strip()
         if self.song:
             from dataclasses import replace
@@ -423,17 +423,17 @@ class LyricEditor(QDialog):
         lines = self._marked_lines()
         if not lines:
             QMessageBox.information(
-                self, "Belum ada yang ditandai",
-                "Belum ada satu pun baris yang punya timestamp.\n\n"
-                "Putar lagunya, lalu tekan Enter tiap kali baris berganti."
+                self, "Nothing timed yet",
+                "Not a single line has a timestamp yet.\n\n"
+                "Play the song, then press Enter each time the line changes."
             )
             return
         unmarked = len(self._entries) - len(lines)
         if unmarked > 0:
             answer = QMessageBox.question(
-                self, "Masih ada baris tanpa tanda",
-                f"{unmarked} baris belum ditandai waktunya dan tidak akan ikut tersimpan.\n\n"
-                "Simpan sekarang?",
+                self, "Some lines are still untimed",
+                f"{unmarked} line(s) have no timestamp and will not be saved.\n\n"
+                "Save now?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
             )
             if answer != QMessageBox.Yes:
@@ -448,11 +448,11 @@ class LyricEditor(QDialog):
         from PySide6.QtWidgets import QFileDialog
         lines = self._marked_lines()
         if not lines:
-            QMessageBox.information(self, "Kosong", "Belum ada baris bertanda waktu.")
+            QMessageBox.information(self, "Empty", "There are no timed lines yet.")
             return
-        title = self.title_input.text().strip() or "lirik"
+        title = self.title_input.text().strip() or "lyrics"
         path, _ = QFileDialog.getSaveFileName(
-            self, "Ekspor .lrc", f"{title}.lrc", "File LRC (*.lrc)"
+            self, "Export .lrc", f"{title}.lrc", "LRC files (*.lrc)"
         )
         if not path:
             return
@@ -460,7 +460,7 @@ class LyricEditor(QDialog):
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(format_lrc(lines, title, self.artist_input.text().strip()))
         except OSError as exc:
-            QMessageBox.warning(self, "Gagal menulis file", str(exc))
+            QMessageBox.warning(self, "Could not write the file", str(exc))
 
     # ---------- jam ----------
 

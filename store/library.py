@@ -36,7 +36,7 @@ class Song:
 
     @property
     def label(self) -> str:
-        return f"{self.title} — {self.artist}" if self.artist else self.title
+        return f"{self.title} - {self.artist}" if self.artist else self.title
 
     def to_dict(self) -> dict:
         return {
@@ -63,7 +63,7 @@ class Song:
         lines.sort(key=lambda pair: pair[0])
         return cls(
             id=data.get("id") or str(uuid.uuid4()),
-            title=data.get("title") or "(tanpa judul)",
+            title=data.get("title") or "(untitled)",
             artist=data.get("artist") or "",
             album=data.get("album") or "",
             duration_sec=float(data.get("duration_sec") or 0.0),

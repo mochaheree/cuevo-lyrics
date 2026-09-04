@@ -79,20 +79,20 @@ class ShowView(QWidget):
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(0)
 
-        head, self.saved_count = self._head("Show tersimpan")
+        head, self.saved_count = self._head("Saved shows")
         box.addWidget(head)
 
         self.saved_list = QListWidget()
         self.saved_list.itemDoubleClicked.connect(self.open_selected)
         box.addWidget(self.saved_list, 1)
 
-        new_btn = QPushButton("Show baru")
+        new_btn = QPushButton("New show")
         new_btn.setProperty("variant", "quiet")
         new_btn.clicked.connect(self.new_show)
-        open_btn = QPushButton("Buka")
+        open_btn = QPushButton("Open")
         open_btn.setProperty("variant", "quiet")
         open_btn.clicked.connect(self.open_selected)
-        del_btn = QPushButton("Hapus")
+        del_btn = QPushButton("Delete")
         del_btn.setProperty("variant", "quiet")
         del_btn.clicked.connect(self.delete_selected)
         box.addWidget(self._foot(new_btn, open_btn, del_btn))
@@ -102,7 +102,7 @@ class ShowView(QWidget):
         self.saved_list.clear()
         shows = self.store.list_shows()
         for show in shows:
-            item = QListWidgetItem(f"  {show.name}    {len(show.song_ids)} lagu")
+            item = QListWidgetItem(f"  {show.name}    {len(show.song_ids)} songs")
             item.setData(Qt.UserRole, show.id)
             if show.id == self.session.show.id:
                 item.setForeground(QColor(theme.T1))
@@ -121,7 +121,7 @@ class ShowView(QWidget):
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(0)
 
-        head, self.dirty_label = self._head("Show yang dibuka")
+        head, self.dirty_label = self._head("Open show")
         box.addWidget(head)
 
         name_bar = QWidget()
@@ -129,11 +129,11 @@ class ShowView(QWidget):
         nb = QHBoxLayout(name_bar)
         nb.setContentsMargins(12, 9, 12, 9)
         nb.setSpacing(7)
-        label = QLabel("Nama")
+        label = QLabel("Name")
         label.setStyleSheet(f"color:{theme.T3};font-size:11px;")
         self.name_input = QLineEdit()
         self.name_input.textEdited.connect(self._on_name_edited)
-        save_btn = QPushButton("Simpan show")
+        save_btn = QPushButton("Save show")
         save_btn.clicked.connect(self.save_show)
         nb.addWidget(label)
         nb.addWidget(self.name_input, 1)
@@ -146,9 +146,9 @@ class ShowView(QWidget):
         self.song_list.model().rowsMoved.connect(self._on_rows_moved)
         box.addWidget(self.song_list, 1)
 
-        add_btn = QPushButton("Tambah dari library")
+        add_btn = QPushButton("Add from library")
         add_btn.clicked.connect(self.add_from_library)
-        remove_btn = QPushButton("Keluarkan")
+        remove_btn = QPushButton("Remove")
         remove_btn.setProperty("variant", "quiet")
         remove_btn.clicked.connect(self.remove_selected)
         box.addWidget(self._foot(add_btn, remove_btn))
@@ -171,7 +171,7 @@ class ShowView(QWidget):
             duration = int(song.duration_sec)
             item = QListWidgetItem(
                 f"  {position + 1:>2}   {song.label}"
-                f"      {duration // 60}:{duration % 60:02d}   {len(song.lines)} baris"
+                f"      {duration // 60}:{duration % 60:02d}   {len(song.lines)} lines"
             )
             item.setData(Qt.UserRole, song.id)
             item.setForeground(QColor(theme.T1 if position == self.session.index else theme.T2))
@@ -181,21 +181,21 @@ class ShowView(QWidget):
         self._update_dirty()
         if self.session.dropped:
             self.status.setText(
-                f"⚠ {len(self.session.dropped)} lagu dikeluarkan otomatis karena "
-                f"sudah tidak ada di library. Simpan show untuk mempermanenkan."
+                f"⚠ {len(self.session.dropped)} song(s) removed automatically because "
+                f"they are no longer in the library. Save the show to make it permanent."
             )
         elif not self.session.show.song_ids:
-            self.status.setText("Show masih kosong — tekan “Tambah dari library”.")
+            self.status.setText("This show is empty. Press “Add from library” to start.")
         else:
             self.status.setText("")
 
     def _update_dirty(self):
-        self.dirty_label.setText("belum disimpan" if self.session.dirty else "tersimpan")
+        self.dirty_label.setText("unsaved" if self.session.dirty else "saved")
 
     # ---------- aksi ----------
 
     def _on_name_edited(self, text):
-        self.session.set_name(text.strip() or "Show tanpa nama")
+        self.session.set_name(text.strip() or "Untitled show")
         self._update_dirty()
 
     def _on_rows_moved(self, *args):
@@ -209,14 +209,14 @@ class ShowView(QWidget):
         songs = self.library.list_songs()
         if not songs:
             QMessageBox.information(
-                self, "Library kosong",
-                "Belum ada lagu di library.\n\nCari di tab Library lalu tekan "
-                "“Simpan ke library”, atau buat lagu manual."
+                self, "Library is empty",
+                "There are no songs in the library yet.\n\nSearch in the Library tab, then press "
+                "“Save to library”, or create a manual song."
             )
             return
-        labels = [f"{song.label}  ({len(song.lines)} baris)" for song in songs]
+        labels = [f"{song.label}  ({len(song.lines)} lines)" for song in songs]
         choice, ok = QInputDialog.getItem(
-            self, "Tambah lagu ke show", "Pilih lagu:", labels, 0, False
+            self, "Add a song to the show", "Choose a song:", labels, 0, False
         )
         if not ok:
             return
@@ -237,7 +237,7 @@ class ShowView(QWidget):
         self.session.mark_saved(saved)
         self.refresh_saved()
         self._update_dirty()
-        self.status.setText(f"“{saved.name}” tersimpan.")
+        self.status.setText(f"“{saved.name}” saved.")
 
     def new_show(self):
         if not self._confirm_discard():
@@ -255,7 +255,7 @@ class ShowView(QWidget):
             return
         show = self.store.load(item.data(Qt.UserRole))
         if show is None:
-            self.status.setText("File show tidak terbaca.")
+            self.status.setText("That show file could not be read.")
             return
         self.session.load(show)
         self.refresh_songs()
@@ -268,7 +268,7 @@ class ShowView(QWidget):
             return
         show_id = item.data(Qt.UserRole)
         if QMessageBox.question(
-            self, "Hapus show", f"Hapus “{item.text().strip()}”?\n\nLagu-lagunya tetap ada di library.",
+            self, "Delete show", f"Delete “{item.text().strip()}”?\n\nIts songs stay in the library.",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         ) != QMessageBox.Yes:
             return
@@ -279,8 +279,8 @@ class ShowView(QWidget):
         if not self.session.dirty:
             return True
         answer = QMessageBox.question(
-            self, "Perubahan belum disimpan",
-            f"“{self.session.show.name}” punya perubahan yang belum disimpan.\n\nBuang perubahan itu?",
+            self, "Unsaved changes",
+            f"“{self.session.show.name}” has unsaved changes.\n\nDiscard them?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         return answer == QMessageBox.Yes

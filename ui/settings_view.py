@@ -54,7 +54,7 @@ class Badge(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAlignment(Qt.AlignCenter)
-        self.set_state("off", "MATI")
+        self.set_state("off", "OFF")
 
     def set_state(self, kind, text):
         colors = {
@@ -218,7 +218,7 @@ class SettingsView(QWidget):
         root.addWidget(rack)
 
         if settings.load_error:
-            warning = QLabel(f"⚠ {settings.load_error}. Dipakai nilai default.")
+            warning = QLabel(f"⚠ {settings.load_error}. Using defaults.")
             warning.setWordWrap(True)
             theme.paint(warning, f"color:{theme.STANDBY};padding:10px 16px;font-size:11px;"
                                  f"background:{theme.V2};border-top:1px solid {theme.SEAM};")
@@ -264,7 +264,7 @@ class SettingsView(QWidget):
     # ---------- modul: Output ----------
 
     def _build_output(self):
-        module = Module("Output Spout")
+        module = Module("Spout output")
         self.output_module = module
 
         self.sender_input = self._line_edit(self.settings.spout_sender_name, 170)
@@ -282,17 +282,17 @@ class SettingsView(QWidget):
             widget.editingFinished.connect(self._commit)
         self.fps_input.currentTextChanged.connect(lambda _: self._commit())
 
-        box = module.field("Resolusi", self.width_input, self._small("x", theme.T4),
+        box = module.field("Resolution", self.width_input, self._small("x", theme.T4),
                            self.height_input, self._small("FPS"), self.fps_input)
         box.addStretch(1)
-        module.hint("Muncul di Resolume pada Sources, lalu Spout. "
-                    "Resolusi hanya bisa diubah saat output berhenti.")
+        module.hint("Shows up in Resolume under Sources, then Spout. "
+                    "Resolution can only change while output is stopped.")
         return module
 
     # ---------- modul: Penyimpanan ----------
 
     def _build_storage(self):
-        module = Module("Penyimpanan")
+        module = Module("Storage")
         self.storage_module = module
 
         self.library_input = self._line_edit(self.settings.library_path, mono=True)
@@ -303,21 +303,21 @@ class SettingsView(QWidget):
         self._refresh_path_display()
 
         module.field("Library", self.library_input,
-                     self._quiet("Ubah"), self._quiet("Buka"))
+                     self._quiet("Change"), self._quiet("Open"))
         module.body.itemAt(module.body.count() - 1).widget().layout().itemAt(2).widget()\
             .clicked.connect(self._pick_library)
         module.body.itemAt(module.body.count() - 1).widget().layout().itemAt(3).widget()\
             .clicked.connect(lambda: self._reveal(self.settings.library_path))
 
         module.field("Shows", self.shows_input,
-                     self._quiet("Ubah"), self._quiet("Buka"))
+                     self._quiet("Change"), self._quiet("Open"))
         module.body.itemAt(module.body.count() - 1).widget().layout().itemAt(2).widget()\
             .clicked.connect(self._pick_shows)
         module.body.itemAt(module.body.count() - 1).widget().layout().itemAt(3).widget()\
             .clicked.connect(lambda: self._reveal(self.settings.shows_path))
 
-        module.hint("Path dipendekkan. Lengkapnya muncul saat disentuh kursor. "
-                    "Satu file .showproject.json per show.")
+        module.hint("Paths are shortened here. Hover to see the whole thing. "
+                    "One .showproject.json file per show.")
         return module
 
     def _refresh_path_display(self):
@@ -331,33 +331,33 @@ class SettingsView(QWidget):
     def _build_hotkey(self):
         from ui.global_hotkey import is_supported, DEFAULT_BINDINGS
 
-        module = Module("Hotkey")
+        module = Module("Hotkeys")
         self.hotkey_module = module
 
         globals_by_name = {name: label for name, _, _, label in DEFAULT_BINDINGS}
         module.reference(None, [
             [("Space", "play / pause"),
-             ("Kiri / Kanan", "pindah baris"),
+             ("Left / Right", "change line"),
              ("B", "blank")],
             [(globals_by_name.get("play_pause", ""), "global"),
-             ("Ctrl+Alt+Kiri / Kanan", "global"),
+             ("Ctrl+Alt+Left / Right", "global"),
              (globals_by_name.get("blank", ""), "global")],
         ])
 
-        self.global_hotkey_box = SegmentedToggle()
+        self.global_hotkey_box = SegmentedToggle("Off", "On")
         self.global_hotkey_box.setChecked(self.settings.global_hotkey_enabled)
         self.global_hotkey_box.toggled.connect(self._on_global_hotkey_toggled)
         self.global_hotkey_status = self._small("", theme.STANDBY)
-        module.line(self._small("Hotkey global", theme.T3),
+        module.line(self._small("Global hotkeys", theme.T3),
                     self.global_hotkey_box, self.global_hotkey_status)
 
         if not is_supported():
             self.global_hotkey_box.setEnabled(False)
-            self.global_hotkey_box.setToolTip("Hotkey global hanya tersedia di Windows.")
+            self.global_hotkey_box.setToolTip("Global hotkeys are Windows-only.")
 
-        module.hint("Kombinasi global sengaja berbeda. Hotkey global bersifat eksklusif "
-                    "se-sistem, jadi mendaftarkan Space polos akan mematikan tombol spasi "
-                    "di seluruh Windows.")
+        module.hint("Global shortcuts use different keys on purpose. Windows hands them "
+                    "to one app only, so a plain Space here would stop the spacebar "
+                    "working everywhere else.")
         return module
 
     def _on_global_hotkey_toggled(self, enabled):
@@ -386,16 +386,16 @@ class SettingsView(QWidget):
                 self.midi_port.addItem(name, index)
             self.midi_port.setCurrentIndex(min(self.settings.midi_port_index, len(ports) - 1))
         else:
-            self.midi_port.addItem("(tidak ada device terdeteksi)", 0)
+            self.midi_port.addItem("(no device detected)", 0)
             self.midi_port.setEnabled(False)
         self.midi_port.currentIndexChanged.connect(self._on_midi_toggled)
 
-        rescan = self._quiet("Scan", "Device yang dicolok setelah aplikasi dibuka "
-                                     "tidak muncul sendiri.")
+        rescan = self._quiet("Scan", "Devices you plug in after starting the app "
+                                     "will not show up on their own.")
         rescan.clicked.connect(self._rescan_midi)
         module.field("Device", self.midi_port, rescan)
 
-        self.midi_box = SegmentedToggle()
+        self.midi_box = SegmentedToggle("Off", "On")
         self.midi_box.setChecked(self.settings.midi_enabled)
         self.midi_box.toggled.connect(self._on_midi_toggled)
         self.midi_status = self._small("", theme.STANDBY)
@@ -404,17 +404,17 @@ class SettingsView(QWidget):
         notes = [(str(note), command.replace("_", " "))
                  for note, command in note_map_help()]
         half = (len(notes) + 1) // 2
-        module.reference("Peta note", [notes[:half], notes[half:]])
+        module.reference("Note map", [notes[:half], notes[half:]])
 
         if not MIDI_AVAILABLE:
             for widget in (self.midi_box, self.midi_port, rescan):
                 widget.setEnabled(False)
-            self.midi_box.setToolTip("python-rtmidi belum terpasang.\n"
+            self.midi_box.setToolTip("python-rtmidi is not installed.\n"
                                      "pip install python-rtmidi")
         elif not ports:
             self.midi_box.setEnabled(False)
-            self.midi_box.setToolTip("Tidak ada device MIDI terdeteksi. "
-                                     "Colok device lalu tekan Scan.")
+            self.midi_box.setToolTip("No MIDI device detected. "
+                                     "Plug one in, then press Scan.")
         return module
 
     def _rescan_midi(self):
@@ -427,12 +427,12 @@ class SettingsView(QWidget):
                 self.midi_port.addItem(name, index)
             self.midi_port.setEnabled(True)
             self.midi_box.setEnabled(True)
-            self.midi_status.setText(f"{len(ports)} device ditemukan")
+            self.midi_status.setText(f"{len(ports)} device(s) found")
         else:
-            self.midi_port.addItem("(tidak ada device terdeteksi)", 0)
+            self.midi_port.addItem("(no device detected)", 0)
             self.midi_port.setEnabled(False)
             self.midi_box.setEnabled(False)
-            self.midi_status.setText("masih tidak ada device")
+            self.midi_status.setText("still no device")
         self.midi_port.blockSignals(False)
         self.refresh_state()
 
@@ -455,7 +455,7 @@ class SettingsView(QWidget):
         module = Module("OSC")
         self.osc_module = module
 
-        self.osc_box = SegmentedToggle()
+        self.osc_box = SegmentedToggle("Off", "On")
         self.osc_box.setChecked(self.settings.osc_enabled)
         self.osc_box.toggled.connect(self._on_osc_toggled)
         self.osc_port = self._spin(1024, 65535, self.settings.osc_port or DEFAULT_PORT)
@@ -465,9 +465,9 @@ class SettingsView(QWidget):
 
         # Dikelompokkan menurut fungsi, bukan diurutkan abjad: operator mencari
         # "yang mana untuk blank", bukan "yang mana huruf b".
-        arguments = {"/cuevo/song/goto": "nomor lagu",
-                     "/cuevo/offset": "detik",
-                     "/cuevo/offset/nudge": "detik"}
+        arguments = {"/cuevo/song/goto": "song number",
+                     "/cuevo/offset": "seconds",
+                     "/cuevo/offset/nudge": "seconds"}
         groups = (("/cuevo/play", "/cuevo/pause", "/cuevo/playpause",
                    "/cuevo/next", "/cuevo/prev"),
                   ("/cuevo/blank", "/cuevo/blank/on", "/cuevo/blank/off"),
@@ -476,7 +476,7 @@ class SettingsView(QWidget):
         columns = [[(address, arguments.get(address, ""))
                     for address in group if address in ADDRESS_MAP]
                    for group in groups]
-        module.reference("Alamat yang diterima", columns)
+        module.reference("Accepted addresses", columns)
 
         # Kalau nanti ada alamat baru di ADDRESS_MAP tapi lupa dimasukkan ke
         # `groups`, alamat itu tidak akan pernah muncul di layar. Lebih baik
@@ -484,9 +484,9 @@ class SettingsView(QWidget):
         listed = {address for group in groups for address in group}
         missing = sorted(set(ADDRESS_MAP) - listed)
         if missing:
-            module.hint("Belum dikelompokkan: " + "  ".join(missing))
-        module.hint("Bentrokan port dilaporkan, bukan didiamkan. Pesan bernilai nol "
-                    "tetap diterima untuk alamat berargumen, misalnya reset offset ke 0.")
+            module.hint("Not grouped yet: " + "  ".join(missing))
+        module.hint("If the port is already taken you will see it here. Addresses that "
+                    "carry a value still accept 0, so you can reset the offset.")
         return module
 
     def _on_osc_toggled(self, *_):
@@ -513,35 +513,35 @@ class SettingsView(QWidget):
         if output_running is not None:
             self.output_module.badge.set_state(
                 "live" if output_running else "off",
-                "MENGIRIM" if output_running else "BERHENTI")
+                "SENDING" if output_running else "STOPPED")
 
         if song_count is not None and show_count is not None:
-            self.storage_module.note.setText(f"{song_count} lagu, {show_count} show")
-            self.storage_module.badge.set_state("info", "LOKAL")
+            self.storage_module.note.setText(f"{song_count} songs, {show_count} shows")
+            self.storage_module.badge.set_state("info", "LOCAL")
 
         active = self.settings.global_hotkey_enabled
         problem = self.global_hotkey_status.text().startswith("⚠")
         self.hotkey_module.badge.set_state(
             "warn" if problem else ("live" if active else "off"),
-            "BERMASALAH" if problem else ("GLOBAL AKTIF" if active else "GLOBAL MATI"))
+            "PROBLEM" if problem else ("GLOBAL ON" if active else "GLOBAL OFF"))
 
         osc_problem = self.osc_status.text().startswith("⚠")
         osc_on = self.osc_box.isChecked()
         self.osc_module.badge.set_state(
             "warn" if osc_problem else ("live" if osc_on else "off"),
-            "GAGAL" if osc_problem else (f"PORT {self.osc_port.value()}" if osc_on else "MATI"))
+            "FAILED" if osc_problem else (f"PORT {self.osc_port.value()}" if osc_on else "OFF"))
 
         midi_problem = self.midi_status.text().startswith("⚠")
         midi_on = self.midi_box.isChecked() and self.midi_box.isEnabled()
         self.midi_module.badge.set_state(
             "warn" if midi_problem else ("live" if midi_on else "off"),
-            "GAGAL" if midi_problem else ("AKTIF" if midi_on else "MATI"))
+            "FAILED" if midi_problem else ("ON" if midi_on else "OFF"))
 
     # ---------- simpan ----------
 
     def _pick_library(self):
         path, _ = QFileDialog.getSaveFileName(
-            self, "Lokasi file library", self.settings.library_path, "JSON (*.json)")
+            self, "Library file location", self.settings.library_path, "JSON (*.json)")
         if not path:
             return
         self.settings.library_path = path
@@ -550,7 +550,7 @@ class SettingsView(QWidget):
         self.libraryPathChanged.emit(path)
 
     def _pick_shows(self):
-        path = QFileDialog.getExistingDirectory(self, "Folder show", self.settings.shows_path)
+        path = QFileDialog.getExistingDirectory(self, "Shows folder", self.settings.shows_path)
         if path:
             self.settings.shows_path = path
             self._refresh_path_display()

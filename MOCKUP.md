@@ -1,4 +1,10 @@
-# CUEVO Lyrics — UI Mockup (v0.3 draft)
+# CUEVO Lyrics UI Mockup (v0.3 draft)
+
+> **Status: arsip.** Ini wireframe rancangan sebelum aplikasinya dibangun,
+> disimpan sebagai catatan asal-usul desainnya. Yang jadi tidak persis sama:
+> ada tab **Donate** yang belum terpikir waktu itu, jendela **Cast** (§3.14),
+> dan seluruh teks antarmuka sekarang berbahasa Inggris. Yang berlaku
+> sekarang ada di `SRS.md` dan di aplikasinya sendiri.
 
 Turunan langsung dari `SRS.md`. Setiap panel diberi tag requirement
 supaya bisa dilacak balik. Target window: **1280×800 minimum**, resizable.
@@ -7,7 +13,7 @@ Legend: `⠿` drag handle · `▶` baris/lagu aktif · `✓` sudah lewat · `●
 
 ---
 
-## Screen 1 — LIVE (layar utama operator)
+## Screen 1: LIVE (layar utama operator)
 
 Ini layar yang dipakai 95% waktu saat show berjalan.
 
@@ -17,7 +23,7 @@ Ini layar yang dipakai 95% waktu saat show berjalan.
 ├───────────────────────────────────────────────────────────────────────────────────────┤
 │  ▌LIVE▐  Library   Show   Style   Settings                                            │
 ├──────────────────────┬─────────────────────────────────┬──────────────────────────────┤
-│ SET LIST       3/8   │ THE CHAIN — Fleetwood Mac       │ OUTPUT PREVIEW        [live] │
+│ SET LIST       3/8   │ THE CHAIN - Fleetwood Mac       │ OUTPUT PREVIEW        [live] │
 │                      │                                 │ ┌──────────────────────────┐ │
 │ ⠿ 1 ✓ Opening        │   [00:24.10] Listen to the wi…  │ │                          │ │
 │ ⠿ 2 ✓ Great Are You  │   [00:27.93] Watch the sun ri…  │ │   ·watch the sun rise·   │ │
@@ -46,7 +52,7 @@ REQ-F-OPS-01/02 (preview + next line) · REQ-F-OUT-04 (preview scroll multi-bari
 
 ---
 
-## Screen 2 — LIBRARY (cari online + library lokal)
+## Screen 2: LIBRARY (cari online + library lokal)
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
@@ -68,7 +74,7 @@ REQ-F-OPS-01/02 (preview + next line) · REQ-F-OUT-04 (preview scroll multi-bari
 ├───────────────────────────────────────────────────────────────────────────────────────┤
 │  [ Muat ke Player ]   [ Simpan ke Library ]   [ + Tambah ke Show ]   [ Edit Lirik… ]   │
 │                                                                                        │
-│  ⚠ Offline — hasil pencarian LRCLIB tidak tersedia, library lokal tetap bisa dipakai.  │
+│  ⚠ Offline - hasil pencarian LRCLIB tidak tersedia, library lokal tetap bisa dipakai.  │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,11 +82,11 @@ REQ-F-OPS-01/02 (preview + next line) · REQ-F-OUT-04 (preview scroll multi-bari
 
 > ⚠️ **SRS perlu direvisi:** REQ-F-LIB-01 masih berbunyi *"berdasarkan judul
 > (+ artis opsional)"*. Ganti jadi: *"berdasarkan satu query bebas yang boleh
-> berisi judul, artis, atau keduanya"* — memetakan ke param `q` LRCLIB.
+> berisi judul, artis, atau keduanya"*, memetakan ke param `q` LRCLIB.
 
 ---
 
-## Screen 3 — EDITOR LIRIK MANUAL (tap-to-timestamp)
+## Screen 3: EDITOR LIRIK MANUAL (tap-to-timestamp)
 
 Dipanggil dari tombol `Edit Lirik…` atau `+ Lagu Manual`.
 
@@ -101,18 +107,18 @@ Dipanggil dari tombol `Edit Lirik…` atau `+ Lagu Manual`.
 │   ▶ Play  ⏸ Pause   00:20.55 ├──────●──────────────────────┤ 03:20                    │
 │                                                                                        │
 │              ╔═══════════════════════════════════════════════╗                         │
-│              ║   [ TAP — tandai waktu baris berikutnya ]     ║   ⌨ Enter               │
+│              ║   [ TAP - tandai waktu baris berikutnya ]     ║   ⌨ Enter               │
 │              ╚═══════════════════════════════════════════════╝                         │
 │                                                    [ Batal ]  [ Simpan ke Library ]    │
 └───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Requirement coverage:** REQ-F-LIB-03 (editor manual — **Must**, belum ada sama sekali) ·
+**Requirement coverage:** REQ-F-LIB-03 (editor manual, **Must**, belum ada sama sekali) ·
 REQ-F-LIB-05 (geser semua timestamp)
 
 ---
 
-## Screen 4 — STYLE / TEMPLATE (panel paling berat secara teknis)
+## Screen 4: STYLE / TEMPLATE (panel paling berat secara teknis)
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
@@ -144,12 +150,12 @@ REQ-F-LIB-05 (geser semua timestamp)
 
 ---
 
-## Screen 5 — SETTINGS
+## Screen 5: SETTINGS
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
 │  OUTPUT                                                                                │
-│    Spout sender name  [ CUEVO Lyrics        ]        ● Terhubung — Resolume mendeteksi   │
+│    Spout sender name  [ CUEVO Lyrics        ]        ● Terhubung, Resolume mendeteksi   │
 │    Resolusi           [ 1920 ] × [ 1080 ]          Target FPS [ 30 ▾ ]                 │
 │                                                                                        │
 │  PENYIMPANAN                                                                           │
@@ -167,10 +173,10 @@ REQ-F-LIB-05 (geser semua timestamp)
 
 ---
 
-## Screen 6 — OPERATOR WINDOW (window kedua, monitor terpisah, opsional)
+## Screen 6: OPERATOR WINDOW (window kedua, monitor terpisah, opsional)
 
 ```
-┌─ Operator Display — monitor 2 ────────────────────────────────────────────────────────┐
+┌─ Operator Display, monitor 2 ────────────────────────────────────────────────────────┐
 │                                                                                        │
 │   NOW    RUN IN THE SHADOWS                                                            │
 │                                                                                        │

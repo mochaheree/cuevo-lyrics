@@ -45,7 +45,7 @@ class Row(QWidget):
         box.setSpacing(10)
         self.name = QLabel(label)
         self.name.setFixedWidth(104)
-        self.name.setToolTip("Klik kanan pada kontrolnya untuk kembali ke default")
+        self.name.setToolTip("Right-click the control to reset it to default")
         box.addWidget(self.name)
         for widget in widgets:
             box.addWidget(widget)
@@ -126,7 +126,7 @@ class SwatchButton(QPushButton):
 
     def _pick(self):
         color = QColorDialog.getColor(
-            QColor(*self._rgba), self, "Pilih warna",
+            QColor(*self._rgba), self, "Pick a colour",
             QColorDialog.ShowAlphaChannel,
         )
         if color.isValid():
@@ -177,7 +177,7 @@ class StyleView(QWidget):
         box.setContentsMargins(0, 0, 0, 0)
         box.setSpacing(0)
 
-        head = QLabel("  Program — apa yang tayang")
+        head = QLabel("  Program Preview")
         theme.paint(head,
             f"background:{theme.V3};color:{theme.T3};font-size:11px;padding:6px 12px;"
             f"border-bottom:1px solid {theme.SEAM};")
@@ -200,8 +200,8 @@ class StyleView(QWidget):
         box.addWidget(self.warning)
 
         note = QLabel(
-            "Perubahan langsung tayang — tidak ada tombol Apply.\n"
-            "Kalau output sedang jalan, Resolume ikut berubah seketika."
+            "Changes apply as you make them. There is no Apply button.\n"
+            "If output is running, Resolume updates right away."
         )
         note.setWordWrap(True)
         note.setStyleSheet(f"color:{theme.T3};font-size:11px;padding:10px 14px;")
@@ -219,7 +219,7 @@ class StyleView(QWidget):
 
         box.addWidget(self._template_bar())
 
-        box.addWidget(self._group("Tampilan"))
+        box.addWidget(self._group("Appearance"))
         self.layout_seg = SegmentedControl(["Scroll multiline", "Single line"])
         self.layout_scroll = self.layout_seg.button(0)
         self.layout_single = self.layout_seg.button(1)
@@ -228,7 +228,7 @@ class StyleView(QWidget):
                                  (self.layout_seg, "layout")))
 
         self.font_combo = QComboBox()
-        self.font_combo.addItem("(bawaan sistem)", None)
+        self.font_combo.addItem("(system default)", None)
         for label in sorted(self._fonts):
             self.font_combo.addItem(label, self._fonts[label])
         self.font_combo.currentIndexChanged.connect(self._emit)
@@ -236,14 +236,14 @@ class StyleView(QWidget):
 
         self.size_slider = FloatSlider(16, 200, 64, decimals=0, suffix=" px")
         self.size_slider.changed.connect(self._emit)
-        box.addWidget(self._bind(Row("Ukuran", self.size_slider),
+        box.addWidget(self._bind(Row("Size", self.size_slider),
                                  (self.size_slider, "active_font_size")))
 
         self.text_color = SwatchButton((255, 255, 255, 255))
         self.text_color.colorPicked.connect(self._emit)
         self.text_hex = QLabel()
         self.text_hex.setStyleSheet(f"color:{theme.T2};font-family:{theme.MONO};font-size:11px;")
-        box.addWidget(self._bind(Row("Warna teks", self.text_color, self.text_hex, _stretch()),
+        box.addWidget(self._bind(Row("Text colour", self.text_color, self.text_hex, _stretch()),
                                  (self.text_color, "text_color")))
 
         self.outline_color = SwatchButton((0, 0, 0, 255))
@@ -254,7 +254,7 @@ class StyleView(QWidget):
                                  (self.outline_color, "outline_color"),
                                  (self.outline_slider, "outline_width")))
 
-        box.addWidget(self._group("Scroll — REQ-F-OUT-05"))
+        box.addWidget(self._group("Scroll"))
         self.before_spin = QSpinBox()
         self.after_spin = QSpinBox()
         for spin in (self.before_spin, self.after_spin):
@@ -263,8 +263,8 @@ class StyleView(QWidget):
             spin.valueChanged.connect(self._emit)
         self.context_hint = QLabel()
         self.context_hint.setStyleSheet(f"color:{theme.T3};font-size:11px;")
-        box.addWidget(self._bind(Row("Baris konteks", _tag("sebelum"), self.before_spin,
-                                     _tag("sesudah"), self.after_spin, self.context_hint, _stretch()),
+        box.addWidget(self._bind(Row("Context lines", _tag("before"), self.before_spin,
+                                     _tag("after"), self.after_spin, self.context_hint, _stretch()),
                                  (self.before_spin, "context_before"),
                                  (self.after_spin, "context_after")))
 
@@ -274,12 +274,12 @@ class StyleView(QWidget):
         self.edge_fade = FloatSlider(0.0, 0.5, 0.18)
         self.anchor = FloatSlider(0.0, 1.0, 0.50)
         self.transition = FloatSlider(0, 2000, 550, decimals=0, suffix=" ms")
-        for label, widget, field in (("Jarak baris", self.spacing_slider, "line_spacing_ratio"),
+        for label, widget, field in (("Line spacing", self.spacing_slider, "line_spacing_ratio"),
                                      ("Size falloff", self.size_falloff, "size_falloff"),
                                      ("Opacity falloff", self.opacity_falloff, "opacity_falloff"),
                                      ("Edge fade", self.edge_fade, "edge_fade_ratio"),
                                      ("Anchor Y", self.anchor, "vertical_anchor_ratio"),
-                                     ("Transisi", self.transition, "transition_ms")):
+                                     ("Transition", self.transition, "transition_ms")):
             widget.changed.connect(self._emit)
             box.addWidget(self._bind(Row(label, widget), (widget, field)))
 
@@ -384,18 +384,18 @@ class StyleView(QWidget):
         box.setSpacing(7)
         self.template_combo = QComboBox()
         self.template_combo.currentIndexChanged.connect(self._on_template_selected)
-        save_btn = QPushButton("Simpan")
+        save_btn = QPushButton("Save")
         save_btn.clicked.connect(self.save_template)
-        saveas_btn = QPushButton("Simpan sbg…")
+        saveas_btn = QPushButton("Save as…")
         saveas_btn.setProperty("variant", "quiet")
         saveas_btn.clicked.connect(self.save_template_as)
-        del_btn = QPushButton("Hapus")
+        del_btn = QPushButton("Delete")
         del_btn.setProperty("variant", "quiet")
         del_btn.clicked.connect(self.delete_template)
-        reset_btn = QPushButton("Reset semua")
+        reset_btn = QPushButton("Reset all")
         reset_btn.setProperty("variant", "quiet")
-        reset_btn.setToolTip("Kembalikan SEMUA parameter ke default.\n"
-                             "Untuk satu parameter saja: klik kanan pada kontrolnya.")
+        reset_btn.setToolTip("Reset ALL parameters to their defaults.\n"
+                             "For a single parameter: right-click its control.")
         reset_btn.clicked.connect(self._confirm_reset_all)
         box.addWidget(self.template_combo, 1)
         for btn in (save_btn, saveas_btn, del_btn, reset_btn):
@@ -410,9 +410,9 @@ class StyleView(QWidget):
         if not changed:
             return
         if QMessageBox.question(
-            self, "Reset semua parameter",
-            f"{changed} parameter berbeda dari default dan akan dikembalikan.\n\n"
-            f"Lanjutkan?",
+            self, "Reset all parameters",
+            f"{changed} parameter(s) differ from default and will be reset.\n\n"
+            f"Continue?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         ) == QMessageBox.Yes:
             self.reset_all()
@@ -452,7 +452,7 @@ class StyleView(QWidget):
         self.refresh_templates(saved.id)
 
     def save_template_as(self):
-        name, ok = QInputDialog.getText(self, "Simpan template", "Nama template:")
+        name, ok = QInputDialog.getText(self, "Save template", "Template name:")
         if not ok or not name.strip():
             return
         saved = self.store.upsert(Template(name=name.strip(), style=self.style))
@@ -464,13 +464,13 @@ class StyleView(QWidget):
             return
         if template.builtin:
             QMessageBox.information(
-                self, "Preset bawaan",
-                f"“{template.name}” adalah preset bawaan dan tidak bisa dihapus.\n\n"
-                "Pakai “Simpan sbg…” untuk membuat versimu sendiri."
+                self, "Built-in preset",
+                f"“{template.name}” is a built-in preset and cannot be deleted.\n\n"
+                "Use “Save as…” to create your own version."
             )
             return
         if QMessageBox.question(
-            self, "Hapus template", f"Hapus “{template.name}”?",
+            self, "Delete template", f"Delete “{template.name}”?",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         ) == QMessageBox.Yes:
             self.store.delete(template.id)
@@ -569,7 +569,7 @@ class StyleView(QWidget):
 
         before, after = self._visible_context(-1), self._visible_context(+1)
         asked = self.before_spin.value() + self.after_spin.value()
-        self.context_hint.setText(f"efektif {before}+{after}")
+        self.context_hint.setText(f"effective {before}+{after}")
         self.context_hint.setStyleSheet(
             f"color:{theme.STANDBY if (before + after) < asked else theme.T3};font-size:11px;")
 
@@ -578,16 +578,16 @@ class StyleView(QWidget):
         smallest = size * max(0.0, 1.0 - 2 * self.size_falloff.value())
         if size < MIN_SAFE_FONT_PX or (smallest and smallest < MIN_SAFE_FONT_PX):
             messages.append(
-                f"⚠ Font efektif turun sampai ~{smallest:.0f}px. Di bawah "
-                f"{MIN_SAFE_FONT_PX}px, render jadi sekitar 5× lebih lambat dan fps "
-                f"bisa anjlok saat animasi — padahal angka fps di strip atas "
-                f"tetap terlihat normal (SRS §3.2)."
+                f"⚠ Smallest line ends up around {smallest:.0f}px. Below "
+                f"{MIN_SAFE_FONT_PX}px, rendering gets about 5× slower and fps "
+                f"can drop during animation, while the readout up top "
+                f"still looks fine."
             )
         if (before + after) < asked:
             messages.append(
-                f"⚠ Kamu meminta {asked} baris konteks tapi hanya {before + after} "
-                f"yang terlihat — opacity falloff sudah memudarkan sisanya. "
-                f"Turunkan “Opacity falloff” kalau ingin lebih banyak baris tampak."
+                f"⚠ You asked for {asked} context lines but only {before + after} "
+                f"show up. Opacity falloff already faded the rest away. "
+                f"Lower “Opacity falloff” to bring them back."
             )
         if messages:
             self.warning.setText("\n\n".join(messages))

@@ -114,8 +114,8 @@ class MultiLineLyricRenderer:
             except OSError:
                 continue
         if self._font_path is None:
-            print("[MultiLineLyricRenderer] Font TTF tidak ketemu, pakai font bawaan Pillow "
-                  "(ukurannya tetap kecil). Set font_path ke file .ttf yang valid kalau perlu.")
+            print("[MultiLineLyricRenderer] No TrueType font found, falling back to Pillow's "
+                  "built-in font (fixed small size). Set font_path to a valid .ttf if needed.")
         self._font_cache = {}
 
     def _font(self, size: int):
@@ -242,7 +242,7 @@ class SpoutOutputThread(threading.Thread):
         self.style = style or DEFAULT_STYLE
         self.fps = fps
         self._stop_event = threading.Event()
-        self.status = "belum dimulai"
+        self.status = "not started"
         self.actual_fps = 0.0
 
         # Frame terakhir yang dikirim, supaya preview di GUI bisa menampilkan
@@ -283,22 +283,22 @@ class SpoutOutputThread(threading.Thread):
 
     def run(self):
         if not SPOUT_AVAILABLE:
-            self.status = ("SpoutGL/pygame belum terpasang, atau bukan di Windows. "
-                            "Jalankan: pip install SpoutGL pygame PyOpenGL")
+            self.status = ("SpoutGL/pygame not installed, or not running on Windows. "
+                            "Run: pip install SpoutGL pygame PyOpenGL")
             return
 
         try:
             pygame.init()
             # window kecil cuma buat pegang context OpenGL -- jangan ditutup manual
             pygame.display.set_mode((256, 256), pygame.OPENGL | pygame.DOUBLEBUF)
-            pygame.display.set_caption(f"CUEVO Lyrics aktif - jangan ditutup ({self.sender_name})")
+            pygame.display.set_caption(f"CUEVO Lyrics running - do not close ({self.sender_name})")
 
             renderer = build_renderer(self.style)
             animator = ScrollAnimator(self.style.transition_ms)
 
             with SpoutGL.SpoutSender() as sender:
                 sender.setSenderName(self.sender_name)
-                self.status = f"mengirim ke Resolume sebagai Spout sender '{self.sender_name}'"
+                self.status = f"sending to Resolume as Spout sender '{self.sender_name}'"
 
                 frame_interval = 1.0 / self.fps
                 frame_bytes = renderer.render([], -1.0)
@@ -319,7 +319,7 @@ class SpoutOutputThread(threading.Thread):
                             animator.set_transition_ms(pending.transition_ms)
                             animator.force_redraw()
                         except Exception as exc:
-                            self.status = f"style ditolak: {exc}"
+                            self.status = f"style rejected: {exc}"
                         self._pending_style = None
 
                     lines = self.player_state.get_lines()
@@ -362,6 +362,6 @@ class SpoutOutputThread(threading.Thread):
                     self.actual_fps = self.actual_fps * 0.9 + (1.0 / max(period, 1e-6)) * 0.1
 
             pygame.quit()
-            self.status = "berhenti"
+            self.status = "stopped"
         except Exception as exc:  # tampilkan error apapun ke GUI lewat status, bukan crash diam-diam
             self.status = f"error: {exc}"

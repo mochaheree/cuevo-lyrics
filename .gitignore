@@ -16,6 +16,8 @@ Thumbs.db
 dist/
 build/
 *.spec
+# ...kecuali spec milik project ini, yang justru dibutuhkan untuk build
+!CUEVO Lyrics.spec
 
 # Data & cache aplikasi -- ini semua hidup di %APPDATA%\CUEVO Lyrics\ saat
 # runtime, TIDAK PERNAH di dalam folder project. Baris di bawah cuma jaga-jaga

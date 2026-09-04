@@ -73,22 +73,22 @@ class MidiListener:
         self.on_command = on_command
         self.on_activity = on_activity
         self.note_map = dict(note_map or DEFAULT_NOTE_MAP)
-        self.status = "belum dimulai"
+        self.status = "not started"
         self.port_name = None
         self._midi_in = None
         self._lock = threading.Lock()
 
     def start_listening(self):
         if not MIDI_AVAILABLE:
-            self.status = "python-rtmidi belum terpasang"
-            return False, "python-rtmidi belum terpasang (pip install python-rtmidi)"
+            self.status = "python-rtmidi not installed"
+            return False, "python-rtmidi not installed (pip install python-rtmidi)"
         try:
             self._midi_in = rtmidi.MidiIn()
             ports = self._midi_in.get_ports()
             if not ports:
                 self._midi_in = None
-                self.status = "tidak ada device MIDI"
-                return False, "tidak ada device MIDI terdeteksi"
+                self.status = "no MIDI device"
+                return False, "no MIDI device detected"
             if not (0 <= self.port_index < len(ports)):
                 self.port_index = 0
             self._midi_in.open_port(self.port_index)
@@ -99,10 +99,10 @@ class MidiListener:
             self._midi_in.set_callback(self._on_midi)
         except Exception as exc:
             self._midi_in = None
-            self.status = f"gagal: {exc}"
+            self.status = f"failed: {exc}"
             return False, str(exc)
 
-        self.status = f"mendengarkan: {self.port_name}"
+        self.status = f"listening: {self.port_name}"
         return True, None
 
     def stop(self):
@@ -114,7 +114,7 @@ class MidiListener:
                 except Exception:
                     pass
                 self._midi_in = None
-        self.status = "berhenti"
+        self.status = "stopped"
 
     # --- dipanggil DARI THREAD rtmidi ---
 

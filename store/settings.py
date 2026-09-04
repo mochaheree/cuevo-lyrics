@@ -28,6 +28,8 @@ class Settings:
     midi_enabled: bool = False              # REQ-F-RC-02, default mati
     midi_port_index: int = 0
     operator_display_open: bool = False     # REQ-F-OPS-01, dibuka lagi saat startup
+    cast_open: bool = False                 # REQ-F-OUT-09, jendela siar
+    cast_background: str = "#000000"
 
     # --- diisi saat load, tidak ikut disimpan ---
     load_error: str = field(default=None, repr=False, compare=False)
@@ -49,7 +51,7 @@ class Settings:
         """
         data, error = read_json(settings_path(), {})
         if not isinstance(data, dict):
-            data, error = {}, "settings.json formatnya tidak dikenali"
+            data, error = {}, "settings.json format not recognised"
 
         known = {f for f in cls.__dataclass_fields__ if f != "load_error"}
         clean = {}
@@ -80,3 +82,5 @@ class Settings:
         self.midi_enabled = bool(self.midi_enabled)
         self.midi_port_index = max(0, int(self.midi_port_index or 0))
         self.operator_display_open = bool(self.operator_display_open)
+        self.cast_open = bool(self.cast_open)
+        self.cast_background = (self.cast_background or "#000000").strip() or "#000000"

@@ -30,7 +30,7 @@ def _now_iso() -> str:
 
 @dataclass
 class Show:
-    name: str = "Show baru"
+    name: str = "New show"
     song_ids: list = field(default_factory=list)
     template_id: str = None
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -53,7 +53,7 @@ class Show:
         song_ids = [str(x) for x in (data.get("song_ids") or []) if x]
         return cls(
             id=data.get("id") or str(uuid.uuid4()),
-            name=data.get("name") or "Show tanpa nama",
+            name=data.get("name") or "Untitled show",
             song_ids=song_ids,
             template_id=data.get("template_id"),
             created_at=data.get("created_at") or _now_iso(),
@@ -89,7 +89,7 @@ class ShowStore:
                 self.load_errors.append(error)
                 continue
             if not isinstance(data, dict):
-                self.load_errors.append(f"{name} formatnya tidak dikenali")
+                self.load_errors.append(f"{name} format not recognised")
                 continue
             shows.append(Show.from_dict(data))
         shows.sort(key=lambda s: s.updated_at, reverse=True)

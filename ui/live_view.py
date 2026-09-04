@@ -128,16 +128,16 @@ class LiveView(QWidget):
         self.setlist.itemDoubleClicked.connect(self._on_setlist_double_click)
         col.add(self.setlist, 1)
 
-        self.prev_song_btn = QPushButton("◀ Lagu")
+        self.prev_song_btn = QPushButton("◀ Song")
         self.prev_song_btn.setProperty("variant", "quiet")
         self.prev_song_btn.clicked.connect(lambda: self.songStepRequested.emit(-1))
-        self.next_song_btn = QPushButton("Lagu ▶")
+        self.next_song_btn = QPushButton("Song ▶")
         self.next_song_btn.setProperty("variant", "quiet")
         self.next_song_btn.clicked.connect(lambda: self.songStepRequested.emit(+1))
         # Petunjuknya jadi tooltip, bukan label: kolom ini cuma 216px dan dua
         # tombol di atas sudah memakannya, jadi teks apa pun di sini pasti
         # terpotong. Ketahuan lewat pemeriksaan lebar teks vs lebar widget.
-        self.setlist.setToolTip("Klik ganda sebuah lagu untuk pindah ke lagu itu")
+        self.setlist.setToolTip("Double-click a song to jump to it")
         col.add_footer(self.prev_song_btn, self.next_song_btn)
         self.setlist_col = col
         return col
@@ -170,12 +170,12 @@ class LiveView(QWidget):
     # ---------- kolom tengah ----------
 
     def _build_lyrics_column(self):
-        col = Column("Lirik", "0 baris")
+        col = Column("Lyrics", "0 lines")
         self.lyrics = QListWidget()
         self.lyrics.setUniformItemSizes(True)
         self.lyrics.itemClicked.connect(self._on_lyric_clicked)  # klik = lompat
         col.add(self.lyrics, 1)
-        col.add_footer(text="klik baris = lompat ke waktu itu · auto-scroll mengikuti baris aktif")
+        col.add_footer(text="Click any line to jump there. Auto-scroll follows the active line.")
         self.lyrics_col = col
         return col
 
@@ -207,7 +207,7 @@ class LiveView(QWidget):
         theme.paint(wrap,f"background:{theme.V1};")
         col.add(wrap)
 
-        bar = QLabel("frame identik ke Resolume · alpha = kotak-kotak")
+        bar = QLabel("same frame Resolume gets. Checkerboard means transparent.")
         theme.paint(bar,
             f"background:{theme.V3};color:{theme.T4};font-family:{theme.MONO};"
             f"font-size:10px;padding:6px 12px;border-top:1px solid {theme.SEAM};"
@@ -222,7 +222,7 @@ class LiveView(QWidget):
         key = QLabel("NEXT")
         key.setProperty("role", "cue-key")
         key.setStyleSheet(f"color:{theme.STANDBY};font-family:{theme.MONO};font-size:11px;")
-        self.next_line_label = QLabel("—")
+        self.next_line_label = QLabel("-")
         self.next_line_label.setStyleSheet(f"color:{theme.T1};font-size:14px;font-weight:600;")
         self.next_line_label.setWordWrap(True)
         cb.addWidget(key)
@@ -248,13 +248,13 @@ class LiveView(QWidget):
         mode_label = QLabel("Mode")
         mode_label.setProperty("role", "dim")
         mode_label.setStyleSheet(f"color:{theme.T3};font-size:11px;")
-        self.mode_seg = SegmentedControl(["Auto-timestamp", "Manual per-baris"])
+        self.mode_seg = SegmentedControl(["Auto-timestamp", "Manual per-line"])
         self.mode_auto = self.mode_seg.button(0)
         self.mode_manual = self.mode_seg.button(1)
         self.mode_auto.setChecked(True)
         self.mode_manual.setToolTip(
-            "Untuk lagu tanpa tempo tetap (acapella, rubato): timestamp diabaikan, "
-            "baris berpindah hanya saat kamu tekan Next/Prev."
+            "For songs without a steady tempo (a cappella, rubato): timestamps are "
+            "ignored, lines advance only when you press Next/Prev."
         )
         self.mode_manual.toggled.connect(self._on_mode_changed)
 
@@ -276,7 +276,7 @@ class LiveView(QWidget):
             btn.clicked.connect(lambda _=False, d=delta: self.player_state.nudge_offset(d))
             r1.addWidget(btn)
         r1.addStretch(1)
-        hint = QLabel("Space play   ← →  baris   B blank")
+        hint = QLabel("Space play   ← →  line   B blank")
         hint.setStyleSheet(f"color:{theme.T4};font-family:{theme.MONO};font-size:10px;")
         r1.addWidget(hint)
         box.addWidget(row1)
@@ -341,8 +341,8 @@ class LiveView(QWidget):
 
     def _on_mode_changed(self, manual):
         self.player_state.set_manual_mode(manual)
-        self.prev_btn.setText("◀ Prev" if not manual else "◀ Baris")
-        self.next_btn.setText("Next ▶" if not manual else "Baris ▶")
+        self.prev_btn.setText("◀ Prev" if not manual else "◀ Line")
+        self.next_btn.setText("Next ▶" if not manual else "Line ▶")
         # di mode manual jam tidak menentukan apa-apa, jadi jangan beri kesan
         # transport waktu masih mengendalikan tampilan
         for widget in (self.play_btn, self.pause_btn, self.seek):
@@ -377,7 +377,7 @@ class LiveView(QWidget):
 
     def load_song(self, title, lines):
         self.lyrics_col.title_label.setText(title)
-        self.lyrics_col.right_label.setText(f"{len(lines)} baris")
+        self.lyrics_col.right_label.setText(f"{len(lines)} lines")
         self._suppress_lyric_signal = True
         self.lyrics.clear()
         for time_sec, text in lines:
@@ -412,6 +412,6 @@ class LiveView(QWidget):
 
         lines = self.player_state.get_lines()
         if 0 <= index + 1 < len(lines):
-            self.next_line_label.setText(lines[index + 1][1] or "—")
+            self.next_line_label.setText(lines[index + 1][1] or "-")
         else:
-            self.next_line_label.setText("—")
+            self.next_line_label.setText("-")

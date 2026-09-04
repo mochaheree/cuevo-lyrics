@@ -13,7 +13,7 @@ Jalankan: python main.py
 import sys
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QTabWidget, QPushButton, QLineEdit, QSpinBox, QMessageBox,
@@ -23,7 +23,7 @@ from player_state import PlayerState
 from render_style import DEFAULT_STYLE, RenderStyle
 from spout_output import SpoutOutputThread, SPOUT_AVAILABLE
 from show_session import ShowSession
-from store.paths import migrate_legacy_data
+from store.paths import migrate_legacy_data, resource_path
 from store.library import Library
 from store.settings import Settings
 from store.shows import ShowStore
@@ -34,7 +34,9 @@ from ui.library_view import LibraryView
 from ui.settings_view import SettingsView
 from ui.show_view import ShowView
 from ui.style_view import StyleView
+from ui.donate_view import DonateView
 from ui.operator_view import OperatorView
+from ui.cast_window import CastWindow
 from ui.global_hotkey import GlobalHotkeys
 from ui.remote_bridge import RemoteBridge
 from remote.osc_listener import OscListener
@@ -57,7 +59,7 @@ class Placeholder(QWidget):
         reqs = QLabel(requirements)
         reqs.setStyleSheet(f"color:{theme.T3};font-family:{theme.MONO};font-size:11px;")
         reqs.setWordWrap(True)
-        note = QLabel("Rancangan layar ini ada di MOCKUP.html.")
+        note = QLabel("See MOCKUP.html for this screen's design.")
         note.setStyleSheet(f"color:{theme.T3};font-size:12px;")
 
         box.addWidget(head)
@@ -86,6 +88,7 @@ class MainWindow(QMainWindow):
         self.spout_thread = None
         self._song_title = ""
         self.operator_window = None          # REQ-F-OPS-01, window kedua
+        self.cast_window = None              # REQ-F-OUT-09, jendela siar
         self.global_hotkeys = GlobalHotkeys()  # REQ-F-PLAY-07
         self.osc_listener = None             # REQ-F-RC-01
         self.midi_listener = None            # REQ-F-RC-02
@@ -112,7 +115,7 @@ class MainWindow(QMainWindow):
         if not SPOUT_AVAILABLE:
             self.start_btn.setEnabled(False)
             self.start_btn.setToolTip(
-                "SpoutGL/pygame tidak tersedia, atau kamu tidak sedang di Windows.\n"
+                "SpoutGL/pygame not available, or you are not on Windows.\n"
                 "pip install SpoutGL pygame PyOpenGL"
             )
 
@@ -149,21 +152,21 @@ class MainWindow(QMainWindow):
             spin.setFixedWidth(70)
             spin.setButtonSymbols(QSpinBox.NoButtons)
             spin.setAlignment(Qt.AlignRight)
-        box.addWidget(self._cell("Resolusi", self.res_w, times, self.res_h))
+        box.addWidget(self._cell("Resolution", self.res_w, times, self.res_h))
 
-        self.fps_label = QLabel("—")
+        self.fps_label = QLabel("-")
         self.fps_label.setFixedWidth(38)
         theme.paint(self.fps_label,
             f"color:{theme.T2};font-family:{theme.MONO};background:transparent;"
         )
         box.addWidget(self._cell("FPS", self.fps_label))
 
-        self.song_label = QLabel("belum ada lagu dimuat")
+        self.song_label = QLabel("no song loaded")
         theme.paint(self.song_label,f"color:{theme.T2};background:transparent;")
         box.addWidget(self._cell(None, self.song_label), 1)
 
         # REQ-F-SET-05 -- progres show, selalu terlihat di semua tab
-        self.show_label = QLabel("—")
+        self.show_label = QLabel("-")
         theme.paint(self.show_label,
             f"color:{theme.T2};font-family:{theme.MONO};background:transparent;")
         box.addWidget(self._cell("Show", self.show_label))
@@ -174,11 +177,21 @@ class MainWindow(QMainWindow):
         self.operator_btn.setProperty("variant", "quiet")
         self.operator_btn.setCheckable(True)
         self.operator_btn.setToolTip(
-            "Window kedua berisi NOW/NEXT ukuran besar, untuk monitor terpisah")
+            "Second window with large NOW/NEXT text, for a separate monitor")
         self.operator_btn.toggled.connect(self._toggle_operator_window)
         box.addWidget(self._cell(None, self.operator_btn))
 
-        self.start_btn = QPushButton("Mulai output")
+        # REQ-F-OUT-09 -- jendela yang bisa ditangkap OBS / TikTok Live Studio,
+        # atau di-fullscreen di layar kedua. Ketiganya satu fitur yang sama.
+        self.cast_btn = QPushButton("Cast")
+        self.cast_btn.setProperty("variant", "quiet")
+        self.cast_btn.setCheckable(True)
+        self.cast_btn.setToolTip(
+            "Broadcast window for OBS, TikTok Live Studio, or a second screen")
+        self.cast_btn.toggled.connect(self._toggle_cast_window)
+        box.addWidget(self._cell(None, self.cast_btn))
+
+        self.start_btn = QPushButton("Start output")
         self.start_btn.clicked.connect(self.start_spout)
         self.stop_btn = QPushButton("Stop")
         self.stop_btn.setProperty("variant", "quiet")
@@ -244,6 +257,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.show_view, "Show")
         self.tabs.addTab(self.style_view, "Style")
         self.tabs.addTab(self.settings_view, "Settings")
+        self.tabs.addTab(DonateView(), "Donate")
         return self.tabs
 
     # ---------- hotkey (REQ-F-PLAY-06) ----------
@@ -295,9 +309,9 @@ class MainWindow(QMainWindow):
         # sebut nama show-nya: kalau operator sedang punya beberapa show,
         # "tersimpan ke show" saja tidak cukup untuk tahu masuk ke mana
         self.library_view._show_status(
-            f"“{song.title}” ditambahkan ke show “{self.show_session.show.name}” "
-            f"(posisi {len(self.show_session.show.song_ids)}). "
-            f"Belum tersimpan — tekan “Simpan show” di tab Show."
+            f"“{song.title}” added to show “{self.show_session.show.name}” "
+            f"(position {len(self.show_session.show.song_ids)}). "
+            f"Not saved yet. Press “Save show” in the Show tab."
         )
 
     def _goto_show_song(self, index):
@@ -338,6 +352,8 @@ class MainWindow(QMainWindow):
         """Panel Style bergerak -> preview Live dan output ikut, tanpa restart."""
         self.style_config = style
         self.live_view.preview.set_style(style)
+        if self.cast_window is not None:
+            self.cast_window.set_style(style)
         if self.spout_thread and self.spout_thread.is_alive():
             self.spout_thread.set_style(style)      # REQ-NF-02, <100ms
 
@@ -359,6 +375,8 @@ class MainWindow(QMainWindow):
         """
         if self.settings.operator_display_open:
             self.operator_btn.setChecked(True)   # memicu _toggle_operator_window
+        if self.settings.cast_open:
+            self.cast_btn.setChecked(True)
         if self.settings.global_hotkey_enabled:
             QTimer.singleShot(0, lambda: self._apply_global_hotkeys(True))
         if self.settings.osc_enabled:
@@ -408,6 +426,65 @@ class MainWindow(QMainWindow):
         self.settings.operator_display_open = False
         self.settings.save()
 
+    # ---------- Jendela Cast (REQ-F-OUT-09) ----------
+
+    def _toggle_cast_window(self, show):
+        if show:
+            self._open_cast_window()
+        else:
+            self._close_cast_window()
+        self.settings.cast_open = show
+        self.settings.save()
+
+    def _open_cast_window(self):
+        if self.cast_window is not None:
+            self.cast_window.raise_()
+            return
+        self.cast_window = CastWindow(
+            self.player_state, self.style_config,
+            background=self.settings.cast_background,
+            # sumbernya sama persis dengan Operator Display: kalau output
+            # jalan pakai frame kiriman, kalau tidak mencerminkan tab Live.
+            # Biaya render tambahan nol (SRS §3.9).
+            mirror_of=self.live_view.preview,
+        )
+        if self.spout_thread and self.spout_thread.is_alive():
+            self.cast_window.set_mirror(None)
+            self.cast_window.set_source(self.spout_thread)
+        self.cast_window.closed.connect(self._on_cast_closed)
+        self.cast_window.opacityFalloffFixRequested.connect(self._zero_opacity_falloff)
+        self.cast_window.show()
+
+    def _zero_opacity_falloff(self):
+        """
+        Diminta dari jendela Cast: nol-kan opacity falloff supaya baris konteks
+        selamat melewati chroma key (lihat CastWindow._refresh_warning).
+
+        Dijalankan lewat panel Style, bukan dengan menambal style_config
+        langsung, supaya slider di tab Style ikut bergerak dan nilainya bisa
+        ikut tersimpan ke Template seperti perubahan lain.
+        """
+        self.style_view.opacity_falloff.set_value(0.0)
+        self.style_view._emit()
+
+    def _close_cast_window(self):
+        if self.cast_window is None:
+            return
+        window, self.cast_window = self.cast_window, None
+        window.close()
+
+    def _on_cast_closed(self):
+        """Ditutup lewat tombol X-nya sendiri, bukan lewat tombol strip."""
+        if self.cast_window is not None:
+            self.settings.cast_background = self.cast_window.background()
+        self.cast_window = None
+        if self.cast_btn.isChecked():
+            self.cast_btn.blockSignals(True)
+            self.cast_btn.setChecked(False)
+            self.cast_btn.blockSignals(False)
+        self.settings.cast_open = False
+        self.settings.save()
+
     # ---------- hotkey global (REQ-F-PLAY-07) ----------
 
     def _apply_global_hotkeys(self, enabled):
@@ -426,9 +503,9 @@ class MainWindow(QMainWindow):
         if problems:
             self.settings_view.show_global_hotkey_problem("⚠ " + "; ".join(problems))
         elif ok:
-            self.settings_view.show_global_hotkey_problem("aktif")
+            self.settings_view.show_global_hotkey_problem("active")
         else:
-            self.settings_view.show_global_hotkey_problem("⚠ gagal didaftarkan")
+            self.settings_view.show_global_hotkey_problem("⚠ registration failed")
 
     # ---------- remote OSC (REQ-F-RC-01) ----------
 
@@ -480,10 +557,10 @@ class MainWindow(QMainWindow):
         if not ok:
             # port dipakai aplikasi lain -> laporkan, jangan biarkan operator
             # mengira remote-nya aktif padahal tidak (pelajaran §3.3)
-            self.settings_view.show_osc_status(f"⚠ gagal: {error}")
+            self.settings_view.show_osc_status(f"⚠ failed: {error}")
             return
         self.osc_listener = listener
-        self.settings_view.show_osc_status(f"mendengarkan UDP {port}")
+        self.settings_view.show_osc_status(f"listening on UDP {port}")
 
     def _apply_midi(self, enabled, port_index):
         if self.midi_listener is not None:
@@ -506,7 +583,7 @@ class MainWindow(QMainWindow):
             self.settings_view.show_midi_status(f"⚠ {error}")
             return
         self.midi_listener = listener
-        self.settings_view.show_midi_status(f"aktif: {listener.port_name}")
+        self.settings_view.show_midi_status(f"active: {listener.port_name}")
 
     # ---------- settings (REQ-F-CFG-01) ----------
 
@@ -553,12 +630,19 @@ class MainWindow(QMainWindow):
         self.live_view.preview.set_source(self.spout_thread)
         if self.operator_window is not None:
             self.operator_window.set_spout_thread(self.spout_thread)
+        if self.cast_window is not None:
+            # pindah dari mencerminkan preview ke frame asli 1920x1080
+            self.cast_window.set_mirror(None)
+            self.cast_window.set_source(self.spout_thread)
         self._set_output_controls_locked(True)
 
     def stop_spout(self):
         self.live_view.preview.set_source(None)
         if self.operator_window is not None:
             self.operator_window.set_spout_thread(None)
+        if self.cast_window is not None:
+            self.cast_window.set_source(None)
+            self.cast_window.set_mirror(self.live_view.preview)
         if self.spout_thread:
             self.spout_thread.stop()
             self.spout_thread.join(timeout=2)   # REQ-NF-04: berhenti bersih
@@ -566,9 +650,9 @@ class MainWindow(QMainWindow):
             self.spout_thread = None
             if still_alive:
                 QMessageBox.warning(
-                    self, "Output belum berhenti",
-                    "Thread Spout tidak berhenti dalam 2 detik.\n"
-                    "Tutup aplikasi kalau status tidak berubah."
+                    self, "Output did not stop",
+                    "The Spout thread did not stop within 2 seconds.\n"
+                    "Close the application if the status does not change."
                 )
         self._set_output_controls_locked(False)
 
@@ -622,9 +706,9 @@ class MainWindow(QMainWindow):
                 theme.paint(self.song_label,f"color:{theme.LIVE};background:transparent;")
                 return
         else:
-            self.fps_label.setText("—")
+            self.fps_label.setText("-")
 
-        self.song_label.setText(self._song_title or "belum ada lagu dimuat")
+        self.song_label.setText(self._song_title or "no song loaded")
         theme.paint(self.song_label,f"color:{theme.T2};background:transparent;")
 
     def closeEvent(self, event):
@@ -638,6 +722,10 @@ class MainWindow(QMainWindow):
         if self.midi_listener is not None:
             self.midi_listener.stop()
             self.midi_listener = None
+        if self.cast_window is not None:
+            self.settings.cast_background = self.cast_window.background()
+            window, self.cast_window = self.cast_window, None
+            window.close()
         if self.operator_window is not None:
             window, self.operator_window = self.operator_window, None
             window.close()
@@ -648,9 +736,33 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
 
+def _set_app_icon(app):
+    """
+    Pasang ikon aplikasi, dan beri tahu Windows aplikasi ini berdiri sendiri.
+
+    setWindowIcon() saja tidak cukup di Windows. Taskbar mengelompokkan
+    jendela berdasarkan AppUserModelID, dan kalau tidak diisi, jendela ini
+    ikut kelompok python.exe dan yang muncul di taskbar adalah ikon Python,
+    bukan ikon ini. Dipanggil lewat ctypes, tidak menambah dependensi, dan
+    dibungkus supaya build non-Windows tetap jalan.
+    """
+    icon = QIcon(resource_path("assets", "app-icon.ico"))
+    if not icon.isNull():
+        app.setWindowIcon(icon)
+
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "CUEVO.Lyrics")
+        except Exception:
+            pass
+
+
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("CUEVO Lyrics")
+    _set_app_icon(app)
     # WAJIB sebelum stylesheet() dan sebelum widget mana pun dibuat: di sinilah
     # nama font sistem diisi ke theme.SANS/theme.MONO
     theme.init_fonts()

@@ -1,8 +1,8 @@
 # Software Requirements Specification (SRS)
-## CUEVO Lyrics — "ProPresenter Lite" untuk Resolume Arena
+## CUEVO Lyrics, "ProPresenter Lite" untuk Resolume Arena
 
 > Nama produk sebelumnya: **Lyric Spout** (sampai v0.7.3). Direname jadi
-> **CUEVO Lyrics** di v0.7.4 — lihat changelog di bawah dan §3.8. Entri
+> **CUEVO Lyrics** di v0.7.4, lihat changelog di bawah dan §3.8. Entri
 > changelog dan log pengujian sebelum v0.7.4 sengaja **tidak** ditulis
 > ulang; nama lama yang muncul di sana (termasuk transkrip pengujian
 > Spout di §3.2/§3.5) adalah catatan apa yang benar-benar terjadi saat
@@ -10,13 +10,39 @@
 
 | | |
 |---|---|
-| **Versi dokumen** | 0.9.3 |
-| **Status** | Living document — diperbarui seiring development di Claude Code |
+| **Versi dokumen** | 0.11 |
+| **Status** | Living document, diperbarui seiring development di Claude Code |
 | **Tanggal dibuat** | 2026-08-31 |
-| **Terakhir direvisi** | 2026-09-01 (v0.9) |
+| **Terakhir direvisi** | 2026-09-04 (v0.11) |
 | **Pemilik produk** | (kamu) |
 | **Baseline kode saat ini** | Python, **PySide6/Qt**, LRCLIB, SpoutGL |
-| **Mockup UI** | `MOCKUP.html` (v0.4, visual) · `MOCKUP.md` (wireframe teks) |
+| **Mockup UI** | `MOCKUP.md` (wireframe teks) |
+
+**Perubahan v0.11 (ringkas):**
+- **Tab Donate baru (REQ-F-DON-01/02).** Saweria, QRIS, dan tautan kontak.
+  Semua nilainya di satu blok konfigurasi di paling atas `ui/donate_view.py`
+  supaya orang yang fork gampang menggantinya (§3.15).
+- Gambar QRIS yang dipasang ternyata poster utuh, bukan kode QR-nya saja.
+  Dipotong, dan hasilnya diuji dengan cara memindai ulang tangkapan layar
+  aplikasi, bukan file aslinya (§3.15).
+- Label kolomnya "QRIS", bukan "DANA", walaupun penerbitnya DANA. Alasannya
+  di §3.15.
+- **Ikon aplikasi terpasang (§3.16).** Varian squircle dipilih karena varian
+  satunya tidak terbaca di 16px. `.ico` bawaan zip cuma berisi 16x16, jadi
+  dibangun ulang sampai 256.
+- **Persiapan rilis publik pertama (§3.17).** README ditulis ulang dalam
+  bahasa Inggris, `CHANGELOG.md` dibuat, dan satu bug `.gitignore` yang
+  membuat build tidak bisa diulang orang lain diperbaiki.
+
+**Perubahan v0.10 (ringkas):**
+- **REQ-F-OUT-09 baru: jendela Cast.** Satu jendela yang bisa ditangkap OBS,
+  TikTok Live Studio, atau di-fullscreen di layar kedua. Ketiga permintaan
+  itu ternyata satu fitur yang sama (§3.14).
+- Ditemukan lewat pengukuran: **baris konteks yang memudar pakai alpha tidak
+  selamat melewati chroma key.** 57 dari 76 baris berteks tercemar warna
+  latar. Aplikasi sekarang mendeteksi dan menawarkan perbaikannya (§3.14).
+- Biaya render tambahan nol: jendela Cast memakai sumber frame yang sama
+  dengan Operator Display.
 
 **Perubahan v0.9.3 (ringkas):**
 - §3.13 baru: **daftar utang verifikasi** yang dikumpulkan jadi satu tempat.
@@ -34,35 +60,34 @@
 - Mockup: `MOCKUP_TOGGLES.html`.
 
 **Perubahan v0.9.1 (ringkas):**
-- Font UI tidak lagi dipatok ke "Segoe UI"/"Consolas" — kini diambil dari
+- Font UI tidak lagi dipatok ke "Segoe UI"/"Consolas", kini diambil dari
   sistem lewat `theme.init_fonts()` (§3.11).
 - Dua teks terpotong ditemukan lewat pemeriksaan lebar-teks-vs-widget dan
   diperbaiki; sekarang 0 label terpotong di kelima tab.
 
 **Perubahan v0.9 (ringkas):**
 - **Fase 5 sebagian:** trigger **OSC** (tanpa dependency baru, parser
-  ditulis sendiri) dan **MIDI** (`python-rtmidi`, opsional) — keduanya
+  ditulis sendiri) dan **MIDI** (`python-rtmidi`, opsional), keduanya
   memakai daftar aksi yang sama.
 - Tiga bug gagal-diam ditemukan & diperbaiki saat pengujian: `SO_REUSEADDR`
   menyembunyikan bentrokan port, filter tombol-dilepas memakan nilai 0.0
   yang sah, dan Note On velocity 0 memicu aksi dua kali (§3.10).
-- **NDI dan multi-sender sengaja TIDAK dibangun** — evaluasi beserta
+- **NDI dan multi-sender sengaja TIDAK dibangun**, evaluasi beserta
   alasannya di §3.10. Keduanya prioritas Could dan belum berbayar.
 
 **Perubahan v0.8 (ringkas):**
 - **Fase 4 selesai:** Operator Display (window kedua, NOW/NEXT ukuran
   besar, pemilih monitor, fullscreen) dan hotkey global system-wide.
-- `PreviewWidget.set_mirror()` baru — Operator Display menyalin frame dari
+- `PreviewWidget.set_mirror()` baru, Operator Display menyalin frame dari
   preview tab Live, bukan merender sendiri (§3.9).
-- Hotkey global sengaja memakai Ctrl+Alt+..., BUKAN Space/B polos —
-  alasannya di §3.9, dan itu bukan pilihan gaya.
+- Hotkey global sengaja memakai Ctrl+Alt+..., BUKAN Space/B polos, alasannya di §3.9, dan itu bukan pilihan gaya.
 
 **Perubahan v0.7.4 (ringkas):**
 - **Rebranding: "Lyric Spout" → "CUEVO Lyrics"** (permintaan pemilik
   produk, murni penamaan). Judul window, applicationName, User-Agent
   LRCLIB, default sender name, dan folder data semuanya diganti.
-- Folder data lama `%APPDATA%\LyricSpout\` — yang ternyata **sudah
-  berisi data asli** (11 lagu), bukan hasil pengujian — dipindahkan
+- Folder data lama `%APPDATA%\LyricSpout\`, yang ternyata **sudah
+  berisi data asli** (11 lagu), bukan hasil pengujian, dipindahkan
   otomatis ke nama baru sekali saat startup lewat `migrate_legacy_data()`.
 - **Bug kedua ditemukan saat verifikasi migrasi pada data asli itu sendiri:**
   `library_path`/`shows_path` di `settings.json` adalah path absolut yang
@@ -85,18 +110,18 @@
   yang berbeda dari default, dan tombol "Reset semua".
 
 **Perubahan v0.7.1 (ringkas):**
-- **BLANK dikonfirmasi visual di Resolume oleh operator** — catatan
+- **BLANK dikonfirmasi visual di Resolume oleh operator**, catatan
   "belum terverifikasi" di §3.3 ditutup.
 - **Perbaikan kelalaian:** tombol "Tambah ke show" di tab Library masih
   mati sejak Fase 1 dengan tooltip basi, padahal Fase 2 sudah selesai.
-  Lihat §3.6 — dan pelajaran prosesnya.
+  Lihat §3.6, dan pelajaran prosesnya.
 
 **Perubahan v0.7 (ringkas):**
-- **Fase 3 selesai:** panel Style penuh — font, ukuran, warna, outline,
+- **Fase 3 selesai:** panel Style penuh, font, ukuran, warna, outline,
   seluruh parameter scroll, plus Template & 5 preset bawaan.
 - **Dua pengaturan ternyata tidak berpengaruh apa pun** dan diperbaiki
   sebelum panelnya dibangun: baris konteks dan `layout=single_line` (§3.4).
-- Style bisa diganti tanpa menghentikan output; terukur 18–40 ms (§3.5).
+- Style bisa diganti tanpa menghentikan output; terukur 18-40 ms (§3.5).
 - `font_catalog.py` baru: 220 font sistem dipetakan ke path yang dijamin
   bisa dimuat Pillow, bukan sekadar nama keluarga dari Qt.
 - §3.5 mencatat pengukuran yang **salah menyimpulkan** untuk kedua kalinya.
@@ -104,19 +129,18 @@
 **Perubahan v0.6 (ringkas):**
 - **Fase 2 selesai:** Show/Set list (buat, urutkan via drag, simpan/buka),
   navigasi lagu dari tab Live, progres show di status strip.
-- **Bug serius diperbaiki:** BLANK tidak pernah sampai ke output Spout —
-  preview gelap tapi Resolume tetap menampilkan lirik (§3.3).
+- **Bug serius diperbaiki:** BLANK tidak pernah sampai ke output Spout, preview gelap tapi Resolume tetap menampilkan lirik (§3.3).
 - Mode manual per-baris (REQ-F-PLAY-05) diimplementasikan.
 - Modul baru: `store/shows.py`, `show_session.py`, `ui/show_view.py`.
 - §3.3 mencatat pengujian yang **salah menyimpulkan** karena harness
-  menempel ke sender Resolume — beserta apa yang karenanya belum terbukti.
+  menempel ke sender Resolume, beserta apa yang karenanya belum terbukti.
 
 **Perubahan v0.5 (ringkas):**
-- **Output Spout terverifikasi di Windows 11** dengan Resolume aktif — ini
+- **Output Spout terverifikasi di Windows 11** dengan Resolume aktif, ini
   menutup blocker terbesar yang menggantung sejak v0.2 (§3.2).
 - Dua bug performa ditemukan & diperbaiki: outline brute-force (137 ms →
   9,3 ms) dan preview yang justru lebih mahal karena kanvas kecil (§3.2).
-- Preview kini memakai `latest_frame` dari thread Spout saat live — REQ-F-OUT-08
+- Preview kini memakai `latest_frame` dari thread Spout saat live, REQ-F-OUT-08
   terpenuhi secara struktural, bukan lagi lewat kemiripan.
 - **ADR-001 ditinjau: pemicu pindah ke C# TIDAK terpenuhi.** PySide6 tetap.
 - Batasan baru: tebing performa font <20px, berdampak ke panel Style (§10).
@@ -127,18 +151,17 @@
   dan Settings tersimpan antar sesi (§3, §11).
 - Lokasi data pindah ke `%APPDATA%\LyricSpout\`; penulisan JSON dibuat
   **atomik** supaya library tidak rusak kalau aplikasi mati saat menyimpan.
-- `lrc_parser.format_lrc()` baru — lirik hasil ketik manual bisa diekspor
+- `lrc_parser.format_lrc()` baru, lirik hasil ketik manual bisa diekspor
   balik ke `.lrc`, jadi tidak terkunci di `library.json` saja.
 - Requirement baru REQ-F-LIB-08 (konfirmasi sebelum menimpa lirik yang
-  sudah diedit) — lihat §4.1.
+  sudah diedit), lihat §4.1.
 
 **Perubahan v0.3 (ringkas):**
 - §4.1 REQ-F-LIB-01 direvisi: pencarian **satu kolom query bebas**, bukan
   judul + artis terpisah (§4.1).
-- §2.4 & §8: keputusan stack UI — **Tkinter → PySide6**, Tauri ditolak,
+- §2.4 & §8: keputusan stack UI, **Tkinter → PySide6**, Tauri ditolak,
   C# jadi cadangan. Rasional lengkap di §13 (ADR-001).
-- §3: status REQ-F-OUT-02/03 dikoreksi dari "selesai" jadi **cacat** —
-  ditemukan bug yang mematikan animasi transisi dan cache frame (§3.1).
+- §3: status REQ-F-OUT-02/03 dikoreksi dari "selesai" jadi **cacat**, ditemukan bug yang mematikan animasi transisi dan cache frame (§3.1).
 - Requirement baru REQ-F-OUT-08: preview dan Spout wajib satu jalur render.
 - §13 baru: log keputusan arsitektur (ADR).
 
@@ -156,7 +179,7 @@ sekelas **ProPresenter**, tapi difokuskan pada satu kasus penggunaan:
 penuh ProPresenter.
 
 Dokumen ini ditulis supaya bisa langsung dipakai sebagai acuan kerja di
-Claude Code — setiap fitur punya ID requirement, prioritas, dan kriteria
+Claude Code, setiap fitur punya ID requirement, prioritas, dan kriteria
 penerimaan yang bisa diturunkan jadi task/issue.
 
 ### 1.2 Ruang Lingkup Produk
@@ -184,8 +207,7 @@ penerimaan yang bisa diturunkan jadi task/issue.
 "Reverse engineering ProPresenter" di proyek ini dimaknai sebagai:
 > Mempelajari **konsep dan fitur yang terlihat sebagai pengguna**
 > (workflow live lyrics, playlist, stage display, dsb.) lalu
-> mengimplementasikan ulang dari nol dengan arsitektur sendiri —
-> **bukan** mendekompilasi binary ProPresenter, membongkar protokol
+> mengimplementasikan ulang dari nol dengan arsitektur sendiri, > **bukan** mendekompilasi binary ProPresenter, membongkar protokol
 > jaringan berlisensi mereka, atau mengambil aset/kode mereka.
 
 Implikasi praktis untuk development:
@@ -201,7 +223,7 @@ Implikasi praktis untuk development:
 | Istilah | Arti |
 |---|---|
 | **Spout** | Teknologi Windows untuk berbagi tekstur GPU antar aplikasi (video real-time). |
-| **NDI** | Network Device Interface — alternatif Spout yang jalan lintas platform lewat jaringan. |
+| **NDI** | Network Device Interface, alternatif Spout yang jalan lintas platform lewat jaringan. |
 | **LRC** | Format teks lirik dengan timestamp per baris, mis. `[00:17.12] baris lirik`. |
 | **LRCLIB** | Layanan API publik penyedia lirik synced/plain, gratis tanpa API key. |
 | **Show / Set list** | Kumpulan lagu yang diurutkan untuk satu sesi tampil. |
@@ -210,9 +232,9 @@ Implikasi praktis untuk development:
 | **Cue** | Satu aksi trigger (next slide, blank, ganti lagu) yang bisa dipicu manual/remote. |
 
 ### 1.5 Referensi
-- LRCLIB API — https://lrclib.net
-- SpoutGL (Python) — https://github.com/jlai/Python-SpoutGL
-- Resolume Arena — dokumentasi resmi Resolume (Sources > Spout)
+- LRCLIB API, https://lrclib.net
+- SpoutGL (Python), https://github.com/jlai/Python-SpoutGL
+- Resolume Arena, dokumentasi resmi Resolume (Sources > Spout)
 - Baseline kode: `README.md` di root repo ini (v0.1)
 
 ---
@@ -253,7 +275,7 @@ sendiri.
 ### 2.4 Lingkungan Operasi
 - **OS:** Windows 10/11 64-bit (wajib untuk fitur Spout).
 - **Runtime:** Python 3.9+ dengan **PySide6 (Qt 6)** untuk GUI.
-  Keputusan stack sudah diambil di v0.3 — lihat §13 ADR-001.
+  Keputusan stack sudah diambil di v0.3, lihat §13 ADR-001.
   Tkinter ditinggalkan; Tauri ditolak; C# jadi jalur cadangan yang
   dipicu hanya oleh kondisi terukur (§13).
 - **Target:** Resolume Arena versi apa pun yang mendukung Spout receiver.
@@ -268,12 +290,12 @@ sendiri.
   didokumentasikan**, tapi tetap kirim `User-Agent` yang jelas dan
   jangan polling berlebihan (hormati fair-use layanan gratis).
 - Font rendering bergantung pada font TTF yang tersedia di sistem
-  (fallback ke font bawaan Pillow kalau tidak ketemu — kualitas rendah,
+  (fallback ke font bawaan Pillow kalau tidak ketemu, kualitas rendah,
   harus diperbaiki di fase styling).
 
 ### 2.6 Asumsi & Dependensi
 - Audio/musik diputar oleh aplikasi/perangkat lain (Spotify, DJ set,
-  live band, dsb.) — aplikasi ini **tidak** memutar audio, hanya
+  live band, dsb.), aplikasi ini **tidak** memutar audio, hanya
   menyinkronkan teks secara manual terhadap waktu berjalan.
 - Resolume Arena berjalan di komputer yang sama (Spout adalah
   local-machine texture sharing, bukan jaringan).
@@ -290,23 +312,22 @@ Sudah diimplementasikan dan berjalan (dasar untuk lanjutan development):
 | `lrc_parser.py` | `parse_lrc()`, `find_current_line()` (binary search) | ✅ Selesai + teruji |
 | `player_state.py` | State play/pause/seek/offset, thread-safe | ✅ Selesai + teruji |
 | `store/paths.py` | Lokasi `%APPDATA%\CUEVO Lyrics\`, baca/tulis JSON **atomik**, migrasi dari folder nama lama `LyricSpout\` (§3.8) | ✅ Baru (v0.4), direname v0.7.4 |
-| `store/library.py` | `Song` + `Library` — CRUD, pencarian lokal, anti-duplikat, geser timestamp | ✅ Baru (v0.4) + teruji |
-| `store/settings.py` | `Settings` — persist antar sesi, clamp nilai tidak wajar | ✅ Baru (v0.4) + teruji |
-| `ui/lyric_editor.py` | Screen 03 — tap-to-timestamp, geser massal, ekspor `.lrc` | ✅ Baru (v0.4) |
-| `ui/settings_view.py` | Screen 05 — sender, resolusi, fps, lokasi file | ✅ Baru (v0.4) |
-| `render_style.py` | `RenderStyle` — semua parameter visual dalam satu objek, bisa di-`scaled()` untuk preview | ✅ Baru (v0.3) |
-| `scroll_anim.py` | `ScrollAnimator` — state machine posisi scroll + easing, dipakai bersama Spout & preview | ✅ Baru (v0.3) |
-| `spout_output.py` | Render lirik ke RGBA transparan (Pillow) + kirim via SpoutGL | ⚠️ Mode scroll multi-baris (`MultiLineLyricRenderer`) ada, tapi **animasi & cache frame cacat** — lihat §3.1. **Belum pernah teruji di Windows nyata.** |
+| `store/library.py` | `Song` + `Library`, CRUD, pencarian lokal, anti-duplikat, geser timestamp | ✅ Baru (v0.4) + teruji |
+| `store/settings.py` | `Settings`, persist antar sesi, clamp nilai tidak wajar | ✅ Baru (v0.4) + teruji |
+| `ui/lyric_editor.py` | Screen 03, tap-to-timestamp, geser massal, ekspor `.lrc` | ✅ Baru (v0.4) |
+| `ui/settings_view.py` | Screen 05, sender, resolusi, fps, lokasi file | ✅ Baru (v0.4) |
+| `render_style.py` | `RenderStyle`, semua parameter visual dalam satu objek, bisa di-`scaled()` untuk preview | ✅ Baru (v0.3) |
+| `scroll_anim.py` | `ScrollAnimator`, state machine posisi scroll + easing, dipakai bersama Spout & preview | ✅ Baru (v0.3) |
+| `spout_output.py` | Render lirik ke RGBA transparan (Pillow) + kirim via SpoutGL | ⚠️ Mode scroll multi-baris (`MultiLineLyricRenderer`) ada, tapi **animasi & cache frame cacat**, lihat §3.1. **Belum pernah teruji di Windows nyata.** |
 | `app.py` + `ui/` | GUI **PySide6**: status strip, tabs, live view, library view, preview | 🔄 Port dari Tkinter (v0.3) |
 
 > **Perubahan v0.2 (lihat §4.4):** mode tampilan output diubah dari
-> "satu baris polos" menjadi **scroll multi-baris ala Musixmatch** —
-> baris aktif ditonjolkan, baris sekitarnya mengecil/memudar, dan
+> "satu baris polos" menjadi **scroll multi-baris ala Musixmatch**, > baris aktif ditonjolkan, baris sekitarnya mengecil/memudar, dan
 > perpindahan antar baris dianimasikan halus. Ini menggantikan asumsi
 > "single-line" pada draf SRS sebelumnya (REQ-F-OUT-03/04 kini **Must**,
 > bukan lagi **Should**).
 
-### 3.1 Bug ditemukan saat review v0.3 — REQ-F-OUT-02/03 tidak benar-benar selesai
+### 3.1 Bug ditemukan saat review v0.3, REQ-F-OUT-02/03 tidak benar-benar selesai
 
 `SpoutOutputThread.run()` memakai `id(lines)` untuk mendeteksi "lagu baru
 dimuat". Tapi `PlayerState.get_lines()` mengembalikan **list salinan baru
@@ -328,7 +349,7 @@ lagu baru memakai counter itu, bukan identitas objek.
 > yang benar untuk kode yang belum dijalankan adalah **"implemented,
 > unverified"**. Lihat juga §10 (risiko baru).
 
-### 3.2 Verifikasi Spout & performa (v0.5) — dijalankan di Windows 11
+### 3.2 Verifikasi Spout & performa (v0.5), dijalankan di Windows 11
 
 **Output Spout: LULUS.** Diuji dengan proses penerima terpisah yang berlaku
 seperti Resolume (Resolume sendiri terdeteksi aktif di daftar sender:
@@ -347,7 +368,7 @@ seperti Resolume (Resolume sendiri terdeteksi aktif di daftar sender:
 angka fps di status strip, karena cache frame menyembunyikannya:
 
 **(a) Outline digambar brute-force.** `render()` menggambar ulang teks di
-setiap offset dalam kotak `(2*ow+1)²` — untuk `ow=3` itu **48 kali draw per
+setiap offset dalam kotak `(2*ow+1)²`, untuk `ow=3` itu **48 kali draw per
 baris**, sekitar 290 draw per frame. Diganti dengan `stroke_width` bawaan
 Pillow yang melakukan hal sama dalam satu lintasan:
 
@@ -356,7 +377,7 @@ Pillow yang melakukan hal sama dalam satu lintasan:
 | Brute-force (lama) | 137,3 | 7,3 |
 | `stroke_width` (baru) | **9,3** | **107,3** |
 
-Beda hasil hanya 0,8% piksel di tepi outline — dan justru lebih benar,
+Beda hasil hanya 0,8% piksel di tepi outline, dan justru lebih benar,
 karena sudutnya membulat rapi, bukan kotak.
 
 **(b) Preview dirender terpisah di kanvas kecil.** Ternyata **memperkecil
@@ -370,13 +391,13 @@ performa di Pillow/FreeType sekitar 20px:
 | **21 px** | **225** ← tebing |
 | 64 px | 341 |
 
-Preview 480×270 menghasilkan font 16px dan 12px — dua-duanya di sisi lambat,
+Preview 480×270 menghasilkan font 16px dan 12px, dua-duanya di sisi lambat,
 sehingga preview (61 ms) lebih berat daripada output 1920×1080 (26 ms).
 
 Perbaikannya bukan menyetel ukuran, melainkan **menghapus render gandanya**:
 `SpoutOutputThread` sekarang menyimpan `latest_frame`, dan saat output jalan
 preview memakai buffer itu langsung tanpa merender apa pun. Efek sampingnya
-justru memperkuat REQ-F-OUT-08 — preview dan output kini benar-benar buffer
+justru memperkuat REQ-F-OUT-08, preview dan output kini benar-benar buffer
 yang sama, bukan dua hasil yang kebetulan mirip. Saat output mati, preview
 merender sendiri di skala yang menjaga font terkecil tetap di atas ~22px.
 
@@ -393,8 +414,7 @@ tanpa henti sehingga cache frame tidak pernah menolong):
 ```
 
 **Konsekuensi untuk ADR-001:** pemicu pindah ke C# adalah "Pillow terbukti
-tidak sanggup 30 fps". Sesudah perbaikan, **pemicu itu tidak terpenuhi** —
-PySide6 + Pillow tetap dipakai. Tapi headroom-nya hanya sekitar 22%
+tidak sanggup 30 fps". Sesudah perbaikan, **pemicu itu tidak terpenuhi**, PySide6 + Pillow tetap dipakai. Tapi headroom-nya hanya sekitar 22%
 (26 ms dari 33,3 ms), jadi angka ini wajib diukur ulang tiap kali renderer
 disentuh.
 
@@ -406,7 +426,7 @@ sekali pun di `spout_output.py`, dan sinyal `blankToggled` di-`emit` tanpa
 pernah di-`connect`.
 
 Akibatnya di lapangan: **operator menekan BLANK, melihat preview kosong,
-dan mengira penonton tidak melihat apa-apa — sementara Resolume tetap
+dan mengira penonton tidak melihat apa-apa, sementara Resolume tetap
 menampilkan lirik.** Ini mode gagal yang paling mahal dari semua yang
 ditemukan sejauh ini, karena memberi rasa aman yang keliru.
 
@@ -415,13 +435,13 @@ bersama disimpan di salah satu pemakainya, bukan di tempat bersama.
 `_blank` hidup di widget preview, jadi thread Spout tidak mungkin tahu.
 
 **Perbaikan:** `blank` pindah ke `PlayerState`, sejajar dengan posisi waktu
-dan offset — satu-satunya sumber kebenaran yang dibaca thread Spout maupun
+dan offset, satu-satunya sumber kebenaran yang dibaca thread Spout maupun
 preview. Thread Spout juga wajib memicu gambar ulang saat blank berubah,
 karena kalau tidak, cache frame (REQ-F-OUT-02) akan terus mengirim frame
 lama yang masih berisi lirik.
 
 **Verifikasi:** diukur pada `latest_frame`, yaitu buffer yang benar-benar
-dikirim ke Spout — piksel tampak `31765 → 0 → 0 → 36487` (sebelum, saat,
+dikirim ke Spout, piksel tampak `31765 → 0 → 0 → 36487` (sebelum, saat,
 selama, sesudah blank). ✅
 
 > ⚠️ **Catatan kejujuran pengujian.** Percobaan memverifikasi ini lewat
@@ -429,7 +449,7 @@ selama, sesudah blank). ✅
 > sempat salah menyimpulkan "GAGAL". Penyebabnya di harness, bukan produk:
 > `SpoutReceiver.setReceiverName()` tidak menggigit, penerima menempel ke
 > `Arena - Composition` (Resolume) yang kebetulan juga 1920×1080, sehingga
-> yang terukur adalah piksel Resolume — konstan apa pun yang dilakukan.
+> yang terukur adalah piksel Resolume, konstan apa pun yang dilakukan.
 > Diagnosis: `getActiveSender()` = `Arena - Composition`,
 > `getSenderName()` mengembalikan `'1920'` (sampah),
 > `isFrameCountEnabled()` = `False` sehingga `isFrameNew()` tak bermakna.
@@ -455,13 +475,13 @@ Dan `layout` disimpan di `RenderStyle` tapi `build_renderer()` tidak pernah
 meneruskannya.
 
 Kalau panel Style dibangun tanpa pengecekan ini, akan ada **dua kontrol lagi
-yang tampak bekerja padahal tidak** — pola yang sama persis dengan bug BLANK
+yang tampak bekerja padahal tidak**, pola yang sama persis dengan bug BLANK
 (§3.3), dua kali sekaligus.
 
 **Perbaikan:** `_context_factor()` menjadikan batas konteks nyata, meredup
 bertahap sampai nol di jarak (batas + 1) sehingga baris tidak muncul/hilang
 mendadak saat animasi. `single_line` diwujudkan sebagai "nol baris konteks"
-lewat jalur render yang sama, bukan jalur terpisah — satu jalur render,
+lewat jalur render yang sama, bukan jalur terpisah, satu jalur render,
 satu tempat untuk salah.
 
 Sesudah: context 0/1/2 → 1/3/5 baris; `single_line` → 1 baris; asimetris
@@ -469,7 +489,7 @@ Sesudah: context 0/1/2 → 1/3/5 baris; `single_line` → 1 baris; asimetris
 3→4→3, bukan melompat.
 
 **Sisa jebakan yang tidak dihilangkan, tapi ditampilkan.** Jumlah baris
-dibatasi *dua* hal sekaligus — batas konteks dan `opacity_falloff` — dan
+dibatasi *dua* hal sekaligus, batas konteks dan `opacity_falloff`, dan
 yang lebih ketat menang. Menaikkan baris konteks di atas yang diizinkan
 falloff terasa tidak berefek. Ini perilaku yang benar, jadi bukan
 dihilangkan melainkan dijelaskan: panel Style menampilkan "efektif 1+1"
@@ -478,7 +498,7 @@ dan menerangkan penyebabnya.
 ### 3.5 Ganti style tanpa menghentikan output
 
 `SpoutOutputThread` menerima `set_style()` dari thread GUI lewat satu atribut
-`_pending_style` (penugasan atribut atomik di bawah GIL — tidak ada frame
+`_pending_style` (penugasan atribut atomik di bawah GIL, tidak ada frame
 yang separuh style lama separuh baru). Renderer baru dibangun **sebelum**
 ditukar, jadi style yang gagal dimuat tidak mematikan output di tengah acara.
 
@@ -496,7 +516,7 @@ fps sebelum 29.6  ->  fps sesudah 29.7      REQ-NF-02 LULUS
 ```
 
 > ⚠️ **Catatan kejujuran pengujian (kedua kalinya).** Pengukuran pertama
-> memberi 128–171 ms dan menyimpulkan "GAGAL". Salah: fungsi pemeriksanya
+> memberi 128-171 ms dan menyimpulkan "GAGAL". Salah: fungsi pemeriksanya
 > memindai 2 juta piksel per panggilan di Python, jadi yang terukur sebagian
 > besar adalah biaya alat ukurnya sendiri. Sama kelasnya dengan kekeliruan
 > harness di §3.3. **Setiap pengukuran latency wajib memakai detektor yang
@@ -505,9 +525,8 @@ fps sebelum 29.6  ->  fps sesudah 29.7      REQ-NF-02 LULUS
 ### 3.6 Fitur selesai yang pintu masuknya tertinggal mati (v0.7.1)
 
 Tombol **"Tambah ke show"** di tab Library dibuat nonaktif pada Fase 1
-dengan tooltip *"Fase 2 — REQ-F-SET-01 belum diimplementasikan"*. Fase 2
-selesai, `ShowSession.add_song()` berfungsi, tab Show bisa menambah lagu —
-tapi tombol di Library tidak pernah dinyalakan. Ditemukan oleh operator,
+dengan tooltip *"Fase 2, REQ-F-SET-01 belum diimplementasikan"*. Fase 2
+selesai, `ShowSession.add_song()` berfungsi, tab Show bisa menambah lagu, tapi tombol di Library tidak pernah dinyalakan. Ditemukan oleh operator,
 bukan oleh pengujian.
 
 **Kenapa lolos:** pengujian Fase 2 memverifikasi *kemampuannya*
@@ -527,7 +546,7 @@ Settings, yang juga sudah tidak benar.
 
 **Detail perbaikan:** lagu dari hasil pencarian LRCLIB otomatis disimpan ke
 library dulu sebelum masuk show. Show menyimpan **id** lagu, bukan salinan
-liriknya — tanpa langkah itu, id-nya hanya hidup di memori dan show yang
+liriknya, tanpa langkah itu, id-nya hanya hidup di memori dan show yang
 disimpan akan menunjuk lagu yang tidak ada saat dibuka besok.
 
 ### 3.7 Stylesheet container mengecat anak-anaknya (v0.7.3)
@@ -540,16 +559,16 @@ Penyebabnya perilaku Qt yang mudah terlewat: `widget.setStyleSheet("background:#
 mengalahkan stylesheet aplikasi. Panel transport memakai
 `panel.setStyleSheet(f"background:{V1}")`, sehingga setiap tombol di dalamnya
 dipaksa berlatar `#0e0e0f`. Tombol Play memakai latar terang dengan teks
-gelap `#0b0b0c` — begitu latarnya ditimpa jadi gelap, teks gelap di atas
+gelap `#0b0b0c`, begitu latarnya ditimpa jadi gelap, teks gelap di atas
 latar gelap = tidak terlihat, tapi widget-nya tetap ada dan tetap menerima
 klik.
 
 Gejalanya cocok persis: BLANK tetap terlihat karena yang menandainya
-**border** merah, bukan latar — dan border tidak ikut ditimpa.
+**border** merah, bukan latar, dan border tidak ikut ditimpa.
 
 **Ini bukan satu tombol, tapi 48 tempat.** Pola yang sama dipakai di seluruh
 UI sejak v0.3. Yang lain kebetulan tidak separah itu karena teksnya terang,
-jadi hanya "tombol kehilangan bentuknya" — tetap terbaca, jadi tidak
+jadi hanya "tombol kehilangan bentuknya", tetap terbaca, jadi tidak
 dilaporkan.
 
 **Perbaikan:** `theme.paint(widget, css)` memberi objectName unik lalu
@@ -563,7 +582,7 @@ sendiri. Seluruh 48 pemanggilan diganti.
 > objek, §3.3 keadaan bersama di tempat yang salah, sekarang cakupan CSS):
 > **default sebuah mekanisme yang "berlaku lebih luas dari yang diduga"
 > adalah sumber bug yang tidak terlihat.** Selalu batasi cakupan secara
-> eksplisit — jangan mengandalkan tebakan tentang sejauh mana sesuatu
+> eksplisit, jangan mengandalkan tebakan tentang sejauh mana sesuatu
 > merambat.
 >
 > Bug ini juga lolos dari semua pengujian otomatis, karena semuanya menguji
@@ -574,15 +593,15 @@ sendiri. Seluruh 48 pemanggilan diganti.
 ### 3.8 Rebranding: Lyric Spout → CUEVO Lyrics (v0.7.4)
 
 Nama produk diganti dari "Lyric Spout" jadi "CUEVO Lyrics" atas permintaan
-pemilik produk. Ini murni penamaan — tidak ada perubahan fungsi.
+pemilik produk. Ini murni penamaan, tidak ada perubahan fungsi.
 
 **Yang diubah:** judul window (`setWindowTitle`), `QApplication.setApplicationName`,
 default `spout_sender_name` di `store/settings.py`, docstring modul,
 `User-Agent` yang dikirim ke LRCLIB, dan nama folder data.
 
-**Risiko yang ditangani — data pengguna nyata sudah ada.** Sebelum
+**Risiko yang ditangani, data pengguna nyata sudah ada.** Sebelum
 mengganti nama folder `%APPDATA%\LyricSpout\`, ditemukan folder itu **sudah
-berisi data asli** (bukan hasil pengujian) — 3 lagu tersimpan termasuk
+berisi data asli** (bukan hasil pengujian), 3 lagu tersimpan termasuk
 "Siti Nurbaya" oleh Ria Amelia, `settings.json` terisi, dan folder `shows/`.
 Kalau nama folder diganti begitu saja di kode, siapa pun yang sudah pernah
 memakai aplikasi ini akan kehilangan seluruh library dan show-nya secara
@@ -592,21 +611,21 @@ diam-diam saat update.
 `MainWindow.__init__`, sebelum `Settings.load()` atau `Library(...)`
 dibuat. Kalau folder baru (`CUEVO Lyrics`) belum ada tapi folder lama
 (`LyricSpout`) ada, folder lama di-*rename* (bukan disalin lalu dihapus)
-ke nama baru — operasi atomik di filesystem yang sama, jadi tidak ada
+ke nama baru, operasi atomik di filesystem yang sama, jadi tidak ada
 jendela waktu di mana data terlihat hilang. Kalau migrasi gagal (mis. file
 sedang dipakai proses lain), aplikasi tetap dibuka dengan data kosong dan
-folder lama dibiarkan utuh untuk dipindahkan manual — kegagalan migrasi
+folder lama dibiarkan utuh untuk dipindahkan manual, kegagalan migrasi
 tidak boleh menghalangi aplikasi dibuka (semangat yang sama dengan
 REQ-NF-03).
 
 **Yang sengaja TIDAK diubah:** isi `settings.json` yang sudah tersimpan
 (nilai `spout_sender_name` milik instalasi yang sudah ada tetap dipakai
-apa adanya — default baru hanya berlaku untuk instalasi baru atau field
+apa adanya, default baru hanya berlaku untuk instalasi baru atau field
 yang kosong). Kalau operator sudah mengarahkan clip di Resolume ke sender
 lama, itu tetap jalan sampai operator sendiri yang mengubahnya di tab
 Settings.
 
-**Bug kedua, ditemukan saat memverifikasi migrasi pada data asli — ini
+**Bug kedua, ditemukan saat memverifikasi migrasi pada data asli, ini
 yang keempat kalinya berpola sama** (id() §3.1, keadaan bersama §3.3,
 cakupan CSS §3.7, sekarang path absolut basi). `library_path` dan
 `shows_path` di `settings.json` adalah **path absolut yang ditulis
@@ -616,35 +635,33 @@ masih menunjuk ke folder lama yang baru saja lenyap.
 
 Efeknya diam-diam dan berbahaya: `Library.__init__` memanggil `read_json()`
 pada path yang sudah tidak ada, dan `read_json()` menganggap "file tidak
-ada" sebagai kondisi normal (bukan error) — jadi aplikasi terbuka mulus,
+ada" sebagai kondisi normal (bukan error), jadi aplikasi terbuka mulus,
 tanpa pesan kesalahan apa pun, dengan **library kosong**. Operator yang
 tidak memperhatikan akan mengira lagunya benar-benar hilang, padahal
 filenya utuh, cuma terputus dari konfigurasi yang menunjuknya.
 
 Ini terjadi pada **data asli** (bukan data uji): migrasi dijalankan pada
 folder `%APPDATA%\LyricSpout\` milik operator sendiri yang berisi 11 lagu
-tersimpan (termasuk "Siti Nurbaya", "Maroon 5 - Maps", dll — bukan lagu
+tersimpan (termasuk "Siti Nurbaya", "Maroon 5 - Maps", dll, bukan lagu
 uji manapun yang pernah dipakai di sesi ini). Setelah migrasi folder
-berhasil, `library_path` di `settings.json` masih `...\LyricSpout\library.json`
-— path yang sudah tidak ada.
+berhasil, `library_path` di `settings.json` masih `...\LyricSpout\library.json`, path yang sudah tidak ada.
 
 **Perbaikan:** `_rewrite_stored_paths()` dipanggil segera setelah folder
 di-rename, memeriksa apakah `library_path`/`shows_path` berada tepat di
 dalam folder lama (lewat perbandingan prefix path setelah dinormalisasi),
 dan kalau ya menggantinya ke folder baru. Path yang sudah dikustomisasi
-user ke lokasi lain sama sekali (REQ-F-CFG-02) — tidak diawali folder
-lama — dibiarkan apa adanya.
+user ke lokasi lain sama sekali (REQ-F-CFG-02), tidak diawali folder
+lama, dibiarkan apa adanya.
 
 Fungsi ini juga dibuat **self-healing**: kalau folder baru sudah ada tapi
 folder lama sudah tidak ada (persis kondisi yang sempat tertinggal di
 mesin ini sebelum perbaikan ini ditulis), `migrate_legacy_data()` tetap
 mencoba memperbaiki path yang nyasar. Tanpa ini, instalasi yang sempat
-kena bug ini tidak akan pernah pulih sendiri di run berikutnya —
-`migrate_legacy_data()` sudah melihat folder baru ada dan langsung
+kena bug ini tidak akan pernah pulih sendiri di run berikutnya, `migrate_legacy_data()` sudah melihat folder baru ada dan langsung
 berhenti tanpa memeriksa apa pun.
 
 **Verifikasi (checksum, bukan kesan):** sebelum migrasi, `library.json`
-asli dihitung dulu via Python — 11 lagu, judul dicatat satu per satu.
+asli dihitung dulu via Python, 11 lagu, judul dicatat satu per satu.
 Setelah migrasi + perbaikan path, file yang sama dibaca ulang lewat
 `library_path` yang sudah ter-update: 11 lagu, judul identik. Idempotent
 diverifikasi (dijalankan dua kali, hasil kedua sama persis dengan yang
@@ -652,14 +669,14 @@ pertama), dan path yang dikustomisasi user ke folder di luar `%APPDATA%`
 terbukti tidak tersentuh.
 
 > **Pelajaran tambahan:** kesalahan ini nyaris lolos karena `read_json()`
-> sengaja dirancang untuk tidak melempar error saat file tidak ada — desain
+> sengaja dirancang untuk tidak melempar error saat file tidak ada, desain
 > yang benar untuk kasus "lagu belum pernah disimpan", tapi berbahaya untuk
 > kasus "path-nya sendiri yang salah". Keduanya terlihat identik dari sisi
 > `Library`: koleksi kosong. **Verifikasi migrasi data wajib memakai
 > checksum isi (jumlah/nama lagu), bukan cuma "aplikasi terbuka tanpa
 > error".**
 
-### 3.9 Catatan Fase 4 — Operator Display & hotkey global (v0.8)
+### 3.9 Catatan Fase 4, Operator Display & hotkey global (v0.8)
 
 **Operator Display sengaja read-only.** Tidak ada satu pun tombol di window
 itu yang mengubah keadaan tayang. Alasannya praktis: window ini ditaruh di
@@ -676,7 +693,7 @@ yang kedua lebih penting daripada yang pertama:
 | Biaya (kondisi terburuk, 1179×663, gambar ulang tiap frame) | **6,1 ms** | 11,7 ms |
 
 Keduanya masih di bawah budget 33,3 ms, jadi ini **bukan** kasus "kalau
-tidak begini akan gagal" — hanya menyisakan headroom. Alasan sebenarnya:
+tidak begini akan gagal", hanya menyisakan headroom. Alasan sebenarnya:
 dua renderer terpisah punya `ScrollAnimator` masing-masing, jadi posisi
 animasinya bisa meleset beberapa milidetik dan operator akan melihat
 Operator Display sedikit tidak sinkron dengan preview di tab Live. Sama
@@ -684,17 +701,17 @@ semangatnya dengan REQ-F-OUT-08.
 
 > ⚠️ **Koreksi pengukuran (ketiga kalinya soal ini).** Versi pertama
 > komentar kode di `set_mirror()` menulis "masing-masing ~28 ms, totalnya
-> 56 ms, menembus budget" — angka yang **diekstrapolasi dari §3.2, bukan
+> 56 ms, menembus budget", angka yang **diekstrapolasi dari §3.2, bukan
 > diukur di konteks ini**. Pengukuran sebenarnya: 11,7 ms vs 6,1 ms.
 > Selisihnya nyata dan desainnya tetap benar, tapi justifikasinya
 > sebelumnya melebih-lebihkan. Komentar sudah dikoreksi ke angka terukur.
-> Lihat juga §3.5 — aturannya sudah ada, dan tetap kelanggar sekali lagi.
+> Lihat juga §3.5, aturannya sudah ada, dan tetap kelanggar sekali lagi.
 
 **Hotkey global memakai Ctrl+Alt+…, bukan Space/B polos.** Ini bukan
 pilihan gaya. `RegisterHotKey` bersifat **eksklusif se-sistem**: selama
 terdaftar, aplikasi lain tidak menerima tombol itu lagi. Mendaftarkan
 `Space` polos secara global akan mematikan tombol spasi di seluruh
-Windows — tidak bisa mengetik spasi di aplikasi mana pun. Jadi hotkey
+Windows, tidak bisa mengetik spasi di aplikasi mana pun. Jadi hotkey
 global sengaja berbeda dari hotkey dalam-window, dan perbedaan itu
 ditampilkan di tab Settings.
 
@@ -712,13 +729,12 @@ orang, dan sering ditandai antivirus).
 **Kegagalan pendaftaran dilaporkan, tidak didiamkan.** Kombinasi yang sudah
 dipakai aplikasi lain akan gagal didaftarkan; pesannya muncul di tab
 Settings. Kalau didiamkan, operator menekan tombol saat live dan tidak
-terjadi apa-apa tanpa penjelasan — mode gagal yang sama dengan BLANK di
+terjadi apa-apa tanpa penjelasan, mode gagal yang sama dengan BLANK di
 §3.3.
 
 **Verifikasi:** 4 dari 4 kombinasi terdaftar, idempotent (install 2× tidak
 menggandakan), `uninstall()` bersih dan kombinasinya bisa didaftarkan lagi
-sesudahnya. Yang terpenting, **jalur penerimaan pesannya diuji sungguhan**
-— `WM_HOTKEY` dikirim lewat `PostMessageW` ke window handle asli, dan
+sesudahnya. Yang terpenting, **jalur penerimaan pesannya diuji sungguhan**, `WM_HOTKEY` dikirim lewat `PostMessageW` ke window handle asli, dan
 callback-nya terbukti terpanggil (bukan cuma "terdaftar"). Pembedaan itu
 penting: di proyek ini sudah dua kali ada hal yang terlihat terpasang tapi
 tidak pernah benar-benar berjalan (§3.3, §3.4).
@@ -728,9 +744,9 @@ fokus, dan perilaku Operator Display di monitor kedua sungguhan. Mesin uji
 hanya punya satu monitor, jadi pemilih monitor belum pernah melihat lebih
 dari satu pilihan. Keduanya tercatat sebagai V3 dan V4 di §3.13.
 
-### 3.10 Catatan Fase 5 — Remote (OSC/MIDI), dan apa yang sengaja TIDAK dibangun
+### 3.10 Catatan Fase 5, Remote (OSC/MIDI), dan apa yang sengaja TIDAK dibangun
 
-Seluruh item Fase 5 berprioritas **Could** — prioritas terendah di dokumen
+Seluruh item Fase 5 berprioritas **Could**, prioritas terendah di dokumen
 ini. Karena itu keputusannya bukan "bangun semuanya", melainkan menilai
 mana yang benar-benar berbayar. Dua dibangun, dua tidak.
 
@@ -746,14 +762,13 @@ kesalahan diam-diam:**
 **(a) `SO_REUSEADDR` menyembunyikan bentrokan port.** Awalnya opsi itu
 dipasang karena kebiasaan dari server TCP. Di Windows opsi itu justru
 **mengizinkan proses kedua ikut mengikat port yang sama** (berbeda dari
-Linux) — jadi kalau operator sudah punya aplikasi lain di port 8000,
+Linux), jadi kalau operator sudah punya aplikasi lain di port 8000,
 CUEVO ikut bind dan melaporkan "aktif", padahal pesan OSC-nya bisa nyasar
 ke aplikasi itu. Terbukti di pengujian: bind kedua "berhasil". Diperbaiki
 dengan `SO_EXCLUSIVEADDRUSE`, sehingga bentrokan gagal secara eksplisit dan
 bisa dilaporkan ke operator.
 
-> Catatan kecil yang jujur: perbaikan pertamanya juga salah —
-> `SO_EXCLUSIVEADDRUSE` dihitung sebagai `~SO_REUSEADDR + 1` (= −4),
+> Catatan kecil yang jujur: perbaikan pertamanya juga salah, > `SO_EXCLUSIVEADDRUSE` dihitung sebagai `~SO_REUSEADDR + 1` (= −4),
 > padahal definisinya `~SO_REUSEADDR` (= −5). Akibatnya bind **pertama**
 > ikut gagal dengan WinError 10022. Ketahuan karena pengujiannya memeriksa
 > bind pertama juga, bukan cuma yang kedua.
@@ -761,10 +776,10 @@ bisa dilaporkan ke operator.
 **(b) Filter "tombol dilepas" memakan nilai nol yang sah.** Kebanyakan
 controller (TouchOSC, Resolume, foot controller) mengirim dua pesan per
 tekanan: `1.0` saat ditekan, `0.0` saat dilepas. Tanpa filter, satu
-tekanan memicu aksi **dua kali** — saat live artinya lirik melompat dua
+tekanan memicu aksi **dua kali**, saat live artinya lirik melompat dua
 baris. Filter ditambahkan, dan ternyata memunculkan bug kedua: pesan yang
 argumennya adalah **nilai**, bukan status tombol, ikut termakan.
-`/cuevo/offset 0.0` artinya "set offset ke nol" — nilai sah yang justru
+`/cuevo/offset 0.0` artinya "set offset ke nol", nilai sah yang justru
 sering dipakai untuk reset. Efeknya: satu-satunya nilai yang tidak bisa
 dikirim adalah nol. Diperbaiki lewat `VALUE_COMMANDS`, dan diverifikasi
 bahwa tombol tetap terfilter sementara nilai nol lolos.
@@ -777,22 +792,22 @@ SpoutGL: kalau belum terpasang atau tidak ada device, kontrolnya nonaktif
 dengan keterangan, aplikasi tetap jalan penuh.
 
 Jebakan yang sama dengan OSC muncul lagi dalam bentuk berbeda: **Note On
-dengan velocity 0 sebenarnya adalah Note Off** — konvensi yang dipakai
+dengan velocity 0 sebenarnya adalah Note Off**, konvensi yang dipakai
 hampir semua device MIDI. Tanpa ditangani, satu injakan pedal memicu aksi
 dua kali. Sudah ditangani dan diuji.
 
 OSC dan MIDI memakai **daftar aksi yang sama persis** (`_remote_actions()`),
-bukan dua implementasi paralel — diverifikasi lewat pengujian bahwa
+bukan dua implementasi paralel, diverifikasi lewat pengujian bahwa
 himpunan perintah MIDI adalah subset dari perintah OSC dan keduanya ada di
 daftar aksi.
 
 **Keselamatan thread.** Listener OSC dan MIDI memanggil handler dari thread
 masing-masing, bukan thread GUI. Menyentuh widget Qt dari thread lain
 adalah undefined behaviour. Keduanya dijembatani lewat `RemoteBridge`
-(signal Qt, otomatis di-queue ke thread GUI) — pola yang sama dengan
+(signal Qt, otomatis di-queue ke thread GUI), pola yang sama dengan
 pencarian LRCLIB.
 
-#### TIDAK dibangun: NDI (REQ-F-OUT-06) — evaluasi
+#### TIDAK dibangun: NDI (REQ-F-OUT-06), evaluasi
 
 Roadmap §9 menuliskan **"evaluasi NDI"**, dan evaluasi itulah hasilnya:
 
@@ -804,18 +819,18 @@ Roadmap §9 menuliskan **"evaluasi NDI"**, dan evaluasi itulah hasilnya:
 
 **Rekomendasi: tunda sampai ada kebutuhan nyata lintas-mesin.** Membangun
 sekarang berarti menambah dependency berat, permukaan bug baru (encoding,
-bandwidth, latency jaringan), dan beban perawatan — untuk kemampuan yang
+bandwidth, latency jaringan), dan beban perawatan, untuk kemampuan yang
 belum pernah dibutuhkan sekali pun. Kalau nanti dibutuhkan, arsitekturnya
 sudah siap: `spout_output.py` sudah terisolasi di satu modul (REQ-NF-07),
 jadi `ndi_output.py` bisa berdampingan tanpa mengubah apa pun di atasnya.
 
-#### TIDAK dibangun: multi Spout sender (REQ-F-OUT-07) — evaluasi
+#### TIDAK dibangun: multi Spout sender (REQ-F-OUT-07), evaluasi
 
 Secara teknis **murah**: `SpoutOutputThread` sudah menerima `sender_name`,
 jadi menjalankan dua thread hampir tidak butuh kode baru.
 
 Masalahnya bukan teknis, tapi **tidak ada isi untuk sender kedua**. Gunanya
-multi-sender adalah memisahkan lapisan — mis. teks di satu sender,
+multi-sender adalah memisahkan lapisan, mis. teks di satu sender,
 background di sender lain. Tapi background layer (REQ-F-STYLE-04, juga
 prioritas Could) belum dibangun. Membangun multi-sender sekarang
 menghasilkan dua sender yang menampilkan **gambar yang sama persis**.
@@ -849,8 +864,7 @@ setelah `QApplication` dibuat, sebelum stylesheet disusun.
 
 - **SANS: murni dari sistem** (`QApplication.font()`), tanpa preferensi.
 - **MONO: ada satu pengecualian yang disengaja.** Di Windows,
-  `QFontDatabase.systemFont(FixedFont)` mengembalikan **Courier New** —
-  peninggalan lama. Diukur berdampingan pada 13px, Courier New jauh lebih
+  `QFontDatabase.systemFont(FixedFont)` mengembalikan **Courier New**, peninggalan lama. Diukur berdampingan pada 13px, Courier New jauh lebih
   tipis dan lebih sulit dibaca sekilas dibanding Consolas, padahal yang
   memakainya adalah **timecode** yang dibaca cepat di venue gelap.
   Keduanya sama-sama monospace (lebar digit terbukti seragam), jadi ini
@@ -862,7 +876,7 @@ Monospace tetap wajib untuk teks waktu: dengan font proporsional, lebar
 tiap digit berbeda sehingga angka detik membuat seluruh baris bergoyang
 setiap kali berubah.
 
-**Efek di mesin uji: nol perubahan visual** — font sistemnya memang Segoe
+**Efek di mesin uji: nol perubahan visual**, font sistemnya memang Segoe
 UI dan Consolas tersedia. Manfaatnya muncul di mesin dengan font sistem
 berbeda.
 
@@ -872,16 +886,16 @@ berbeda.
 > font sistem, sehingga font resolve ke "Sans Serif"/"monospace" generik
 > yang metriknya berbeda. Diulang dengan platform Windows asli: **1** yang
 > benar-benar terpotong. **Pengujian apa pun yang menyangkut metrik font
-> tidak sah dijalankan di platform offscreen** — ini juga menjelaskan kenapa
+> tidak sah dijalankan di platform offscreen**, ini juga menjelaskan kenapa
 > semua tangkapan layar offscreen di dokumen ini menampilkan kotak-kotak.
 
 **Dua teks terpotong yang ditemukan** (keduanya sudah ada sebelum
 perubahan font ini, bukan akibatnya):
 
-1. Petunjuk "klik ganda = pindah lagu" di footer kolom set list — kolomnya
+1. Petunjuk "klik ganda = pindah lagu" di footer kolom set list, kolomnya
    216px dan dua tombol sudah memakannya, jadi teks apa pun di situ pasti
    terpotong. Dipindah jadi tooltip.
-2. Daftar alamat OSC di tab Settings — dipecah manual dengan `
+2. Daftar alamat OSC di tab Settings, dipecah manual dengan `
 `.
    Pemenggalan tetap pasti salah di salah satu lebar panel; diganti jadi
    `setWordWrap(True)`.
@@ -1004,16 +1018,264 @@ satu menit:
   ditekan tidak melakukan apa-apa, note-nya berbeda dari 48 sampai 53;
   petanya ada di `remote/midi_listener.DEFAULT_NOTE_MAP` dan gampang diubah.
 
+### 3.14 Jendela Cast: OBS, TikTok Live, layar kedua (v0.10)
+
+Permintaannya "multicast ke OBS, TikTok Live, dan window baru". Ditelusuri
+dulu sebelum dibangun, dan ternyata **ketiganya satu fitur yang sama**:
+
+| Tujuan | Yang sebenarnya dibutuhkan |
+|---|---|
+| OBS | Window Capture atau Game Capture, menangkap jendela mana pun |
+| TikTok Live Studio | hanya bisa menangkap layar atau jendela. Tidak mengenal Spout maupun NDI |
+| Layar kedua | jendela yang sama, di-fullscreen di monitor lain |
+
+Jadi yang dibangun satu: `ui/cast_window.py`. Tiga tujuan itu cuma cara
+memakainya. Membangun tiga jalur terpisah akan menghasilkan tiga tempat
+untuk menyimpang, tanpa satu pun kemampuan tambahan.
+
+**Untuk OBS, jalur terbaik justru tidak memakai jendela ini.** OBS punya
+plugin Spout2 yang bisa menerima sender yang sudah ada langsung, lengkap
+dengan alpha asli. Itu disebutkan di dokumentasi dan di README, karena
+menyembunyikannya berarti membiarkan operator memakai jalur yang lebih
+buruk padahal yang lebih baik sudah tersedia sejak v0.5.
+
+#### Temuan terukur: alpha tidak selamat lewat Window Capture
+
+Windows menyusun jendela di atas latar buram sebelum menyerahkannya ke
+Window Capture, baik lewat BitBlt maupun Windows Graphics Capture. Alpha
+per-piksel tidak ikut. Ini sifat Windows, bukan sesuatu yang bisa diakali
+dari sisi aplikasi.
+
+Akibatnya khusus di aplikasi ini serius, karena baris konteks memudar
+dengan **alpha**, bukan dengan warna. Diukur pada latar hijau chroma dengan
+`opacity_falloff` bawaan 0.32:
+
+| Baris | Warna hasil di atas hijau | Nasib setelah di-key |
+|---|---|---|
+| aktif | `255,255,255` putih murni | aman |
+| ±1 | `173,255,173` | menyisakan tepi hijau |
+| ±2 | `90,254,90` nyaris hijau murni | **ikut terbuang** |
+
+Dihitung menyeluruh: **57 dari 76 baris piksel berteks tercemar warna
+latar.** Artinya di latar chroma, praktis hanya baris aktif yang selamat
+utuh, dan operator baru akan menyadarinya saat siaran sudah berjalan.
+
+**Yang dilakukan:** aplikasi mendeteksi kombinasi berbahaya (latar chroma +
+`opacity_falloff` > 0 + ada baris konteks) lalu menampilkan peringatan
+beserta tombol perbaikan satu klik yang men-nol-kan falloff. Sesudah
+diperbaiki, angkanya **0 dari 77**. Hierarki baris tetap terbaca karena
+falloff ukuran tidak diubah.
+
+Peringatan itu sengaja diletakkan di antara bilah kontrol dan area gambar,
+dan ikut tersembunyi di mode bersih. Apa pun yang menimpa area gambar akan
+ikut tersiar.
+
+Tombol perbaikannya bekerja lewat panel Style, bukan menambal `style_config`
+langsung, supaya slider di tab Style ikut bergerak dan nilainya bisa ikut
+tersimpan ke Template seperti perubahan lain.
+
+#### Hal lain yang dijaga
+
+- **Teks BLANK tidak pernah ikut tersiar.** Di preview dalam aplikasi,
+  blank menampilkan tulisan "BLANK" untuk mata operator. Di permukaan siar,
+  blank berarti benar-benar kosong: menulis kata itu di sana sama saja
+  menyiarkannya ke penonton.
+- **Selalu ada jalan keluar.** Di mode bersih jendelanya tanpa bingkai dan
+  tanpa tombol. Klik kanan tetap memunculkan menu, Esc selalu mengembalikan
+  bilah, dan jendelanya bisa digeser dengan drag. Jendela yang bisa terkunci
+  tanpa jalan keluar adalah cacat, bukan kesederhanaan.
+- **Biaya render nol.** Jendela Cast tidak merender apa pun sendiri; ia
+  memakai `PreviewWidget` dengan sumber yang sama seperti Operator Display
+  (§3.9): frame dari thread Spout kalau output jalan, mencerminkan preview
+  tab Live kalau tidak.
+
 **Keterbatasan v0.1 yang jadi starting point requirement fase berikut:**
 - Tidak ada penyimpanan/persistence (setiap buka app, mulai dari nol).
-- Tidak ada playlist — hanya satu lagu aktif dalam satu waktu.
-- Tidak ada input lirik manual/offline — 100% bergantung LRCLIB.
+- Tidak ada playlist, hanya satu lagu aktif dalam satu waktu.
+- Tidak ada input lirik manual/offline, 100% bergantung LRCLIB.
 - Styling sebagian besar masih hardcoded (parameter konstruktor di kode,
-  belum ada panel pengaturan visual di GUI — lihat REQ-F-STYLE-* dan
+  belum ada panel pengaturan visual di GUI, lihat REQ-F-STYLE-* dan
   REQ-F-OUT-05).
-- Tidak ada operator/stage view terpisah — GUI kontrol == satu-satunya
+- Tidak ada operator/stage view terpisah, GUI kontrol == satu-satunya
   window.
 - Tidak ada remote control (keyboard shortcut global, MIDI, OSC).
+
+### 3.15 Tab Donate (v0.11)
+
+Permintaannya: satu tab donasi berisi Saweria, QR pembayaran, dan kontak.
+Yang dibangun `ui/donate_view.py`, satu file, tanpa dependensi baru.
+
+**Semua yang perlu diganti ada di satu blok di paling atas file:**
+`SAWERIA_URL`, `QRIS_FILE`, `QRIS_NAME`, `QRIS_NMID`, `CONTACTS`, `INTRO`.
+Proyek ini dibagikan sebagai open source, jadi orang yang fork harus bisa
+mengganti nomor donasi milik orang lain dalam hitungan detik. Kalau nilainya
+tersebar ke seluruh file, sebagian pasti tertinggal, dan uang orang lain
+yang masuk ke rekening yang salah adalah cacat yang mahal.
+
+#### Kenapa labelnya "QRIS", bukan "DANA"
+
+Payload QR-nya dibaca dan diperiksa isinya: diawali `00020101021126570011
+ID.DANA.WWW`, artinya memang diterbitkan DANA. Tapi formatnya QRIS, standar
+nasional, jadi bisa dipindai GoPay, OVO, ShopeePay, LinkAja, dan aplikasi
+bank. Menulis "DANA" akan membuat pengguna dompet lain mengira mereka tidak
+bisa ikut. Labelnya QRIS, dan daftar aplikasinya ditulis di bawahnya.
+
+#### QR yang tidak bisa dipindai adalah QR yang tidak ada
+
+File yang dipasang pertama kali adalah **poster QRIS utuh** 1136x1600, bukan
+kode QR-nya saja. Ditampilkan dalam kotak 230px, kode QR di dalam poster itu
+tinggal sekitar 80px di layar. Ada gambarnya, kelihatan benar, dan tidak
+bisa dipindai.
+
+Perbaikan pertamanya masih salah. Simbolnya dipotong dari poster, diberi
+quiet zone, lalu ditampilkan 230px, dan **payload-nya sama persis** dengan
+poster aslinya. Semua pemeriksaan file lolos. Yang tidak lolos: memindai
+ulang tangkapan layar aplikasinya.
+
+**Aturan ujinya, dan ini yang membedakan:** yang dipindai harus **tangkapan
+layar aplikasi**, bukan file gambarnya. Orang memindai dari monitor, jadi
+penskalaan Qt, ukuran kotak, dan latar panel ikut menentukan. Memeriksa file
+aslinya akan selalu lolos walaupun yang tampil di layar tidak terbaca sama
+sekali. Tiga percobaan berturut-turut gagal karena hanya file yang diperiksa.
+
+Setelah diukur lewat render Qt sungguhan, sumber masalahnya jelas: kode QRIS
+ini **versi 26, 121 modul**. Angka-angka yang diuji, tiap ukuran tiga kali:
+
+| Ukuran tampil | Piksel per modul | Terbaca dari layar |
+|---|---|---|
+| 230 px | 1,8 | 0/3 |
+| 340 px | 2,7 | 0/3 |
+| 400 px | 3,2 | 0/3 |
+| 460 px | 3,7 | 0/3 |
+| **490 px** | 3,9 | **3/3** |
+| **516 px** | 4,0 | **3/3** |
+
+Memperkecil grid modul menimbulkan moire, dan di bawah 4 piksel per modul
+kodenya berhenti terbaca. Tidak ada jalan tengah: menampilkan QR ini kecil
+supaya "muat" berarti QR-nya tidak berfungsi, dan QR yang tidak bisa
+dipindai sama saja tidak ada.
+
+Yang akhirnya dikerjakan:
+1. Grid 121x121 modulnya dibaca balik dari poster dengan mengambil sampel
+   titik tengah tiap modul, lalu digambar ulang bersih pada 4 piksel per
+   modul. **Payload-nya tidak pernah di-encode ulang**, hanya dibaca
+   gridnya, karena kalau decode-nya meleset sedikit saja uang orang bisa
+   masuk ke rekening yang salah.
+2. Hasilnya persis 516px, dan `donate_view` menampilkannya **tanpa
+   `scaled()`** sama sekali. Menskalakan ke ukuran yang sama pun tetap
+   melewatkan resampling, dan itulah yang merusak gridnya.
+3. Payload potongan dibandingkan dengan payload poster: identik.
+4. Ukuran file ikut turun dari 534 KB jadi 16 KB, efek samping dari
+   menggambar ulang alih-alih memotong citra berartefak.
+
+Satu percobaan yang sempat dicoba dan **ditolak**: menyimpan QR sebagai PNG
+1-bit. Ukurannya jadi 6 KB, tapi Qt tidak menghaluskan saat memperkecil
+gambar format mono, jadi hasilnya justru lebih parah. Ketahuan hanya karena
+tangkapan layarnya dipindai ulang.
+
+Poster aslinya disimpan di `design/qris_poster.png`. Folder `design/`
+sengaja di luar `assets/`, karena `assets/` disalin utuh ke dalam .exe oleh
+`CUEVO Lyrics.spec` dan file sumber tidak perlu ikut.
+
+#### Label wordWrap yang terpotong
+
+Muncul lagi pola §3.7 dan §3.12 dalam bentuk lain. `QLabel` menghitung
+sizeHint seolah teksnya satu baris, jadi label yang membungkus akan
+terpotong. Ditambal `_fit_wrapped()`. Percobaan pertamanya masih salah:
+tingginya dihitung dari `fontMetrics()` sebelum widget dipoles, jadi masih
+memakai font bawaan Qt, bukan `font-size` dari stylesheet. Perbaikannya
+`ensurePolished()` dulu, baru `heightForWidth()`.
+
+Pemeriksaan otomatis lebar teks tidak menangkap ini, karena label yang
+membungkus memang dilewati pemeriksaan lebar sementara yang kurang justru
+tingginya. Pemeriksaannya sekarang mengukur keduanya, dan dijalankan di
+keenam tab: 0 terpotong.
+
+#### Tab yang bisa digulir
+
+Konsekuensi dari 516px: QR-nya butuh 536px tinggi termasuk padding, dan di
+jendela minimum 1280x800 tinggi segitu tidak muat setelah intro dan bar
+kontak. Percobaan pertamanya QR-nya terpotong panel, dan QR terpotong sama
+tidak bergunanya dengan QR yang terlalu kecil.
+
+Isi tab Donate sekarang dibungkus `QScrollArea`. Ini satu-satunya tab yang
+digulir, dan memang cuma tab ini yang punya satu elemen berukuran tetap
+yang lebih tinggi dari jendelanya.
+
+#### Nada halamannya
+
+Sengaja tenang. Tidak ada popup, tidak ada pengingat berkala, tidak ada
+badge di tab. Aplikasi ini dipakai orang saat show berjalan, dan halaman
+donasi yang mendesak akan mengganggu pekerjaan mereka. Kalau file QR-nya
+hilang saat build, tempatnya diisi kotak bertuliskan persis file apa yang
+kurang, bukan ruang kosong tanpa penjelasan.
+
+### 3.17 Persiapan rilis publik pertama (v0.11)
+
+**Dokumen dipisah menurut pembacanya, bukan disamakan.**
+
+| Dokumen | Bahasa | Untuk siapa |
+|---|---|---|
+| `README.md` | Inggris | Orang yang menemukan repo ini di GitHub |
+| `CHANGELOG.md` | Inggris | Orang yang mau tahu isi rilis |
+| `SRS.md` | Indonesia | Catatan kerja, pemilik produk |
+| `design/README.md` | Indonesia | Yang menyentuh file sumber |
+
+README dan CHANGELOG berbahasa Inggris karena antarmuka aplikasinya sudah
+Inggris dan penontonnya global. SRS tetap Indonesia: isinya catatan
+pengambilan keputusan, bukan dokumen pemasaran, dan menerjemahkannya cuma
+menambah risiko salah arti tanpa menambah pembaca.
+
+**Bug `.gitignore` yang membuat build tidak bisa diulang.** Barisnya `*.spec`,
+warisan dari template gitignore Python, dan itu ikut membuang
+`CUEVO Lyrics.spec`. Artinya siapa pun yang meng-clone repo ini tidak bisa
+membangun .exe-nya, padahal README menyuruh menjalankan perintah yang
+memakai file itu. Ditambal dengan pengecualian `!CUEVO Lyrics.spec`.
+
+Polanya sama dengan §3.7 dan §3.8: **default yang berlaku lebih luas dari
+yang dikira.** `*.spec` dibuat untuk file spec sementara, dan ikut menyapu
+satu-satunya file spec yang justru harus ikut.
+
+**Yang sengaja tidak disembunyikan di README.** Bagian "Known limitations"
+menyebut apa adanya bahwa OSC dan MIDI belum pernah diuji dengan perangkat
+sungguhan (§3.13), bahwa Spout cuma jalan di Windows, dan bahwa build-nya
+tidak ditandatangani sehingga SmartScreen akan memperingatkan. Rilis pertama
+yang menyembunyikan tiga hal itu akan langsung jadi tiga issue di hari
+pertama.
+
+**Versinya v0.11.0, bukan v1.0.0.** Masih ada utang verifikasi yang belum
+lunas di §3.13. Menandai sesuatu 1.0 padahal jalur remote-nya belum pernah
+disentuh perangkat asli adalah klaim yang tidak bisa didukung.
+
+---
+
+### 3.16 Ikon aplikasi (v0.11)
+
+Sumbernya `design/cuevo_desktop_icons_bigger.zip`, berisi dua varian.
+
+**Dipakai `squircle-badge`, bukan `extra-tight`.** Alasannya diukur, bukan
+selera: logo `extra-tight` rasionya sekitar 2,5:1, sedangkan slot ikon
+Windows persegi. Di kanvas persegi logo itu jadi pita tipis, dan pada 16px
+sudah tidak terbaca bentuknya. Garis luarnya juga putih, jadi di desktop
+bertema terang bagian itu hilang. Varian squircle mengisi kanvas dan tetap
+kebaca di 16px, di latar gelap maupun terang.
+
+**`app-icon.ico` bawaan zip tidak dipakai, dibangun ulang.** Isinya cuma
+16x16 (652 byte). Windows memakai 32 di taskbar, 48 di desktop, dan 256 di
+tampilan ikon besar; kalau ukurannya tidak ada, Windows memperbesar yang
+16px dan hasilnya buram. `assets/app-icon.ico` sekarang berisi 16, 24, 32,
+48, 64, 128, 256, semuanya dari PNG asli, bukan hasil perbesaran.
+
+**`setWindowIcon()` saja tidak cukup di Windows.** Taskbar mengelompokkan
+jendela berdasarkan AppUserModelID. Tanpa itu diisi, jendela ini ikut
+kelompok `python.exe` dan yang muncul di taskbar adalah ikon Python.
+Diperbaiki di `app._set_app_icon()` lewat `ctypes` ke
+`SetCurrentProcessExplicitAppUserModelID`, tanpa dependensi baru, dan
+dibungkus supaya build non-Windows tetap jalan.
+
+Diverifikasi: setiap ukuran yang diminta (16/32/48/256) dijawab piksel
+persis segitu, artinya benar-benar diambil dari .ico dan bukan hasil Qt
+memperbesar satu-satunya ukuran yang ada.
 
 ---
 
@@ -1026,24 +1288,24 @@ Format ID: `REQ-F-<area>-<nomor>`. Prioritas MoSCoW: **M**ust,
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-LIB-01 | Sistem **harus** menyediakan **satu kolom pencarian bebas** yang boleh diisi judul, artis, atau keduanya dengan urutan kata bebas (dipetakan ke parameter `q` LRCLIB), dan menampilkan hasil beserta status ketersediaan synced lyrics. Operator tidak boleh dipaksa tahu bagian mana judul dan mana artis. *(v0.3 — direvisi dari dua kolom terpisah)* | M |
+| REQ-F-LIB-01 | Sistem **harus** menyediakan **satu kolom pencarian bebas** yang boleh diisi judul, artis, atau keduanya dengan urutan kata bebas (dipetakan ke parameter `q` LRCLIB), dan menampilkan hasil beserta status ketersediaan synced lyrics. Operator tidak boleh dipaksa tahu bagian mana judul dan mana artis. *(v0.3, direvisi dari dua kolom terpisah)* | M |
 | REQ-F-LIB-02 | Sistem **harus** bisa memuat synced lyrics dari hasil pencarian ke player aktif. | M *(selesai)* |
-| REQ-F-LIB-03 | Sistem **harus** menyediakan editor lirik manual: user bisa ketik/tempel teks lirik + set timestamp per baris (atau import file `.lrc` lokal), untuk lagu yang tidak ada di LRCLIB. | M *(selesai — tap-to-timestamp, tekan Enter tiap baris berganti; ekspor `.lrc` juga tersedia)* |
-| REQ-F-LIB-04 | Sistem **harus** menyimpan lagu yang sudah dimuat/diedit ke **library lokal** (file JSON), supaya tidak perlu cari ulang tiap sesi. | M *(selesai — `%APPDATA%\CUEVO Lyrics\library.json`, tulis atomik)* |
-| REQ-F-LIB-05 | Sistem **harus** bisa mengedit ulang timestamp lirik yang sudah dimuat (mis. geser semua baris +N detik sekaligus, untuk kasus versi rekaman beda). | S *(selesai — di editor lirik)* |
-| REQ-F-LIB-06 | Sistem **sebaiknya** punya pencarian lokal di dalam library (bukan hanya LRCLIB) berdasarkan judul/artis. | S *(selesai — aturan query bebas yang sama dengan LRCLIB, menyaring sambil mengetik)* |
-| REQ-F-LIB-07 | Sistem **boleh** mendukung impor massal dari folder berisi banyak file `.lrc`. | C *(selesai — multi-select file, nama file berpola `Artis - Judul` dipecah otomatis)* |
-| REQ-F-LIB-08 | Kalau menyimpan lagu LRCLIB yang **sudah ada** di library dan isi barisnya berbeda, sistem **harus** meminta konfirmasi sebelum menimpa — koreksi timestamp yang sudah dikerjakan operator tidak boleh hilang diam-diam. *(v0.4 — baru, ditemukan saat pengujian)* | M *(selesai)* |
+| REQ-F-LIB-03 | Sistem **harus** menyediakan editor lirik manual: user bisa ketik/tempel teks lirik + set timestamp per baris (atau import file `.lrc` lokal), untuk lagu yang tidak ada di LRCLIB. | M *(selesai, tap-to-timestamp, tekan Enter tiap baris berganti; ekspor `.lrc` juga tersedia)* |
+| REQ-F-LIB-04 | Sistem **harus** menyimpan lagu yang sudah dimuat/diedit ke **library lokal** (file JSON), supaya tidak perlu cari ulang tiap sesi. | M *(selesai, `%APPDATA%\CUEVO Lyrics\library.json`, tulis atomik)* |
+| REQ-F-LIB-05 | Sistem **harus** bisa mengedit ulang timestamp lirik yang sudah dimuat (mis. geser semua baris +N detik sekaligus, untuk kasus versi rekaman beda). | S *(selesai, di editor lirik)* |
+| REQ-F-LIB-06 | Sistem **sebaiknya** punya pencarian lokal di dalam library (bukan hanya LRCLIB) berdasarkan judul/artis. | S *(selesai, aturan query bebas yang sama dengan LRCLIB, menyaring sambil mengetik)* |
+| REQ-F-LIB-07 | Sistem **boleh** mendukung impor massal dari folder berisi banyak file `.lrc`. | C *(selesai, multi-select file, nama file berpola `Artis - Judul` dipecah otomatis)* |
+| REQ-F-LIB-08 | Kalau menyimpan lagu LRCLIB yang **sudah ada** di library dan isi barisnya berbeda, sistem **harus** meminta konfirmasi sebelum menimpa, koreksi timestamp yang sudah dikerjakan operator tidak boleh hilang diam-diam. *(v0.4, baru, ditemukan saat pengujian)* | M *(selesai)* |
 
 ### 4.2 Show / Playlist Management (`SET`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
 | REQ-F-SET-01 | Sistem **harus** bisa membuat **Show/Set list**: daftar lagu terurut untuk satu sesi tampil. | M *(selesai)* |
-| REQ-F-SET-02 | Sistem **harus** bisa menambah, menghapus, dan mengurutkan ulang (drag/tombol naik-turun) lagu dalam satu Show. | M *(selesai — drag di tab Show; panel Live sengaja TIDAK bisa di-drag supaya set list tidak teracak saat acara berjalan)* |
-| REQ-F-SET-03 | Sistem **harus** bisa berpindah cepat ke lagu berikutnya/sebelumnya dalam Show tanpa lewat pencarian ulang. | M *(selesai — tombol Lagu ◀/▶ dan klik ganda di panel set list)* |
-| REQ-F-SET-04 | Sistem **harus** menyimpan Show ke file (`.showproject.json` atau sejenis) yang bisa dibuka kembali persis seperti terakhir disimpan. | M *(selesai — satu file per show, tulis atomik)* |
-| REQ-F-SET-05 | Sistem **sebaiknya** menampilkan progres Show (lagu ke berapa dari berapa) di GUI kontrol. | S *(selesai — di status strip, terlihat dari semua tab)* |
+| REQ-F-SET-02 | Sistem **harus** bisa menambah, menghapus, dan mengurutkan ulang (drag/tombol naik-turun) lagu dalam satu Show. | M *(selesai, drag di tab Show; panel Live sengaja TIDAK bisa di-drag supaya set list tidak teracak saat acara berjalan)* |
+| REQ-F-SET-03 | Sistem **harus** bisa berpindah cepat ke lagu berikutnya/sebelumnya dalam Show tanpa lewat pencarian ulang. | M *(selesai, tombol Lagu ◀/▶ dan klik ganda di panel set list)* |
+| REQ-F-SET-04 | Sistem **harus** menyimpan Show ke file (`.showproject.json` atau sejenis) yang bisa dibuka kembali persis seperti terakhir disimpan. | M *(selesai, satu file per show, tulis atomik)* |
+| REQ-F-SET-05 | Sistem **sebaiknya** menampilkan progres Show (lagu ke berapa dari berapa) di GUI kontrol. | S *(selesai, di status strip, terlihat dari semua tab)* |
 
 ### 4.3 Live Playback & Control (`PLAY`)
 
@@ -1052,54 +1314,62 @@ Format ID: `REQ-F-<area>-<nomor>`. Prioritas MoSCoW: **M**ust,
 | REQ-F-PLAY-01 | Sistem **harus** mendukung Play/Pause/Stop terhadap jam internal lirik (sudah ada). | M *(selesai)* |
 | REQ-F-PLAY-02 | Sistem **harus** mendukung seek ke posisi tertentu via slider (sudah ada). | M *(selesai)* |
 | REQ-F-PLAY-03 | Sistem **harus** mendukung koreksi offset sync manual saat live (sudah ada, `±0.1s/±0.5s`). | M *(selesai)* |
-| REQ-F-PLAY-04 | Sistem **harus** punya tombol/hotkey **"Blank"** yang langsung mengosongkan output (transparan penuh) tanpa mengubah posisi waktu — untuk jeda/transisi antar lagu. | M *(selesai — diperbaiki di v0.6 (§3.3), terverifikasi visual di Resolume v0.7.1)* |
-| REQ-F-PLAY-05 | Sistem **harus** punya mode navigasi manual **per-baris** (tombol Next Line / Previous Line) sebagai alternatif dari mode auto-timestamp, untuk kasus lagu tanpa tempo tetap (acapella, rubato, dsb.) — ini mirip mekanisme "klik untuk lanjut slide" ala ProPresenter. | M *(selesai — di mode manual jam diabaikan, Play/seek dinonaktifkan supaya tidak menyesatkan)* |
+| REQ-F-PLAY-04 | Sistem **harus** punya tombol/hotkey **"Blank"** yang langsung mengosongkan output (transparan penuh) tanpa mengubah posisi waktu, untuk jeda/transisi antar lagu. | M *(selesai, diperbaiki di v0.6 (§3.3), terverifikasi visual di Resolume v0.7.1)* |
+| REQ-F-PLAY-05 | Sistem **harus** punya mode navigasi manual **per-baris** (tombol Next Line / Previous Line) sebagai alternatif dari mode auto-timestamp, untuk kasus lagu tanpa tempo tetap (acapella, rubato, dsb.), ini mirip mekanisme "klik untuk lanjut slide" ala ProPresenter. | M *(selesai, di mode manual jam diabaikan, Play/seek dinonaktifkan supaya tidak menyesatkan)* |
 | REQ-F-PLAY-06 | Sistem **sebaiknya** mendukung keyboard shortcut global (spasi = play/pause, panah = next/prev line, `B` = blank) minimal saat window aplikasi fokus. | S |
-| REQ-F-PLAY-07 | Sistem **boleh** mendukung shortcut global system-wide (aktif walau window lain sedang fokus) — berguna kalau operator kerja dari layar berbeda. | C *(selesai — Win32 RegisterHotKey tanpa dependency baru; Ctrl+Alt+… dan alasannya di §3.9)* |
+| REQ-F-PLAY-07 | Sistem **boleh** mendukung shortcut global system-wide (aktif walau window lain sedang fokus), berguna kalau operator kerja dari layar berbeda. | C *(selesai, Win32 RegisterHotKey tanpa dependency baru; Ctrl+Alt+… dan alasannya di §3.9)* |
 
 ### 4.4 Rendering & Output (`OUT`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-OUT-01 | Sistem **harus** merender lirik ke frame RGBA transparan dan mengirimkannya ke Resolume via Spout secara kontinu. | M *(selesai — **terverifikasi di Windows**, §3.2)* |
-| REQ-F-OUT-02 | Sistem **harus** hanya menggambar ulang frame saat tampilan berubah (teks/baris aktif berganti, ATAU sedang dalam animasi transisi antar baris) — bukan setiap frame tanpa alasan — untuk efisiensi CPU (sudah ada, disesuaikan untuk mode scroll di v0.2). | M *(selesai)* |
-| REQ-F-OUT-03 | Sistem **harus** menganimasikan perpindahan baris aktif secara halus (bukan potongan instan) dengan durasi transisi yang bisa dikonfigurasi (default ±550ms, easing ease-out), supaya terasa "hidup" di layar. | M *(v0.2 — selesai)* |
-| REQ-F-OUT-04 | Sistem **harus** menampilkan lirik bergaya **scroll seperti Musixmatch**: beberapa baris tampil sekaligus (default 2 baris sebelum + baris aktif + 2 baris sesudah), baris aktif ditonjolkan (ukuran font & opacity lebih besar), baris di sekitarnya mengecil dan memudar makin jauh jaraknya, dan baris yang mepet tepi atas/bawah kanvas ikut memudar (alpha) supaya tidak terpotong tegas. | M *(v0.2 — selesai, direvisi dari mode single-line di v0.1)* |
-| REQ-F-OUT-05 | Sistem **sebaiknya** menyediakan pengaturan dari GUI untuk jumlah baris konteks (sebelum/sesudah), kecepatan transisi, dan jarak antar baris. | S *(selesai — dan pengaturannya kini benar-benar berpengaruh, lihat §3.4)* |
-| REQ-F-OUT-06 | Sistem **boleh** menambahkan output NDI sebagai alternatif Spout untuk kebutuhan lintas mesin/jaringan. | C *(dievaluasi, **ditunda** — manfaat nol di kasus satu-mesin; alasan lengkap §3.10)* |
-| REQ-F-OUT-07 | Sistem **boleh** mendukung banyak Spout sender sekaligus (mis. output terpisah untuk teks vs untuk background), untuk fleksibilitas compositing di Resolume. | C *(dievaluasi, **ditunda** — murah secara teknis tapi belum ada isi untuk sender kedua; butuh REQ-F-STYLE-04 dulu, §3.10)* |
-| REQ-F-OUT-08 | Preview di GUI dan frame yang dikirim ke Spout **harus** dihasilkan oleh **jalur render yang sama** (`RenderStyle` + `ScrollAnimator` + `MultiLineLyricRenderer` yang identik, beda hanya faktor skala resolusi). Dilarang membuat tiruan tampilan terpisah di sisi GUI — kalau preview dan output bisa berbeda, panel Style (§4.5) kehilangan gunanya. *(v0.3 — baru)* | M |
+| REQ-F-OUT-01 | Sistem **harus** merender lirik ke frame RGBA transparan dan mengirimkannya ke Resolume via Spout secara kontinu. | M *(selesai, **terverifikasi di Windows**, §3.2)* |
+| REQ-F-OUT-02 | Sistem **harus** hanya menggambar ulang frame saat tampilan berubah (teks/baris aktif berganti, ATAU sedang dalam animasi transisi antar baris), bukan setiap frame tanpa alasan, untuk efisiensi CPU (sudah ada, disesuaikan untuk mode scroll di v0.2). | M *(selesai)* |
+| REQ-F-OUT-03 | Sistem **harus** menganimasikan perpindahan baris aktif secara halus (bukan potongan instan) dengan durasi transisi yang bisa dikonfigurasi (default ±550ms, easing ease-out), supaya terasa "hidup" di layar. | M *(v0.2, selesai)* |
+| REQ-F-OUT-04 | Sistem **harus** menampilkan lirik bergaya **scroll seperti Musixmatch**: beberapa baris tampil sekaligus (default 2 baris sebelum + baris aktif + 2 baris sesudah), baris aktif ditonjolkan (ukuran font & opacity lebih besar), baris di sekitarnya mengecil dan memudar makin jauh jaraknya, dan baris yang mepet tepi atas/bawah kanvas ikut memudar (alpha) supaya tidak terpotong tegas. | M *(v0.2, selesai, direvisi dari mode single-line di v0.1)* |
+| REQ-F-OUT-05 | Sistem **sebaiknya** menyediakan pengaturan dari GUI untuk jumlah baris konteks (sebelum/sesudah), kecepatan transisi, dan jarak antar baris. | S *(selesai, dan pengaturannya kini benar-benar berpengaruh, lihat §3.4)* |
+| REQ-F-OUT-06 | Sistem **boleh** menambahkan output NDI sebagai alternatif Spout untuk kebutuhan lintas mesin/jaringan. | C *(dievaluasi, **ditunda**, manfaat nol di kasus satu-mesin; alasan lengkap §3.10)* |
+| REQ-F-OUT-07 | Sistem **boleh** mendukung banyak Spout sender sekaligus (mis. output terpisah untuk teks vs untuk background), untuk fleksibilitas compositing di Resolume. | C *(dievaluasi, **ditunda**, murah secara teknis tapi belum ada isi untuk sender kedua; butuh REQ-F-STYLE-04 dulu, §3.10)* |
+| REQ-F-OUT-09 | Sistem **harus** menyediakan jendela keluaran yang bisa ditangkap aplikasi lain (OBS, TikTok Live Studio) atau di-fullscreen di layar kedua, dengan pilihan latar hitam atau chroma key, dan mode bersih tanpa bingkai. *(v0.10, baru)* | M *(selesai, §3.14)* |
+| REQ-F-OUT-08 | Preview di GUI dan frame yang dikirim ke Spout **harus** dihasilkan oleh **jalur render yang sama** (`RenderStyle` + `ScrollAnimator` + `MultiLineLyricRenderer` yang identik, beda hanya faktor skala resolusi). Dilarang membuat tiruan tampilan terpisah di sisi GUI, kalau preview dan output bisa berbeda, panel Style (§4.5) kehilangan gunanya. *(v0.3, baru)* | M |
 
 ### 4.5 Styling & Template (`STYLE`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-STYLE-01 | Sistem **harus** menyediakan pengaturan dari GUI (bukan edit kode) untuk: font, ukuran, warna teks, warna outline, tebal outline, posisi vertikal teks. | M *(selesai — font dari katalog 220 font sistem; posisi horizontal tetap rata tengah, lihat catatan di bawah)* |
-| REQ-F-STYLE-02 | Sistem **harus** menyimpan pengaturan style sebagai **Template** yang bisa dipakai ulang lintas Show. | S *(selesai — `templates.json`; resolusi sengaja TIDAK ikut template)* |
-| REQ-F-STYLE-03 | Sistem **sebaiknya** menyediakan beberapa Template siap pakai (preset) untuk mempercepat setup pertama kali. | S *(selesai — 5 preset, dibangkitkan dari kode sehingga tidak bisa hilang atau tertimpa)* |
+| REQ-F-STYLE-01 | Sistem **harus** menyediakan pengaturan dari GUI (bukan edit kode) untuk: font, ukuran, warna teks, warna outline, tebal outline, posisi vertikal teks. | M *(selesai, font dari katalog 220 font sistem; posisi horizontal tetap rata tengah, lihat catatan di bawah)* |
+| REQ-F-STYLE-02 | Sistem **harus** menyimpan pengaturan style sebagai **Template** yang bisa dipakai ulang lintas Show. | S *(selesai, `templates.json`; resolusi sengaja TIDAK ikut template)* |
+| REQ-F-STYLE-03 | Sistem **sebaiknya** menyediakan beberapa Template siap pakai (preset) untuk mempercepat setup pertama kali. | S *(selesai, 5 preset, dibangkitkan dari kode sehingga tidak bisa hilang atau tertimpa)* |
 | REQ-F-STYLE-04 | Sistem **boleh** mendukung background layer opsional di belakang teks (warna solid/gambar) yang ikut dikirim lewat Spout yang sama atau sender terpisah. | C |
-| REQ-F-STYLE-05 | **Klik kanan** pada sebuah kontrol di panel Style **harus** mengembalikan parameter itu saja ke nilai default, tanpa menyentuh parameter lain — mengikuti kebiasaan yang sudah dikenal operator dari Resolume Arena. Parameter yang berbeda dari default ditandai secara visual, dan tersedia "Reset semua" dengan konfirmasi. *(v0.7.2 — baru, atas permintaan operator)* | S *(selesai)* |
+| REQ-F-STYLE-05 | **Klik kanan** pada sebuah kontrol di panel Style **harus** mengembalikan parameter itu saja ke nilai default, tanpa menyentuh parameter lain, mengikuti kebiasaan yang sudah dikenal operator dari Resolume Arena. Parameter yang berbeda dari default ditandai secara visual, dan tersedia "Reset semua" dengan konfirmasi. *(v0.7.2, baru, atas permintaan operator)* | S *(selesai)* |
 
 ### 4.6 Operator / Stage Display (`OPS`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-OPS-01 | Sistem **sebaiknya** memisahkan tampilan **kontrol operator** (daftar lagu, tombol, slider) dari **preview output** (persis seperti yang dikirim ke Spout), supaya operator bisa cek visual tanpa buka Resolume. | S *(selesai — window Operator Display terpisah, bisa dipindah ke monitor lain & fullscreen; sengaja read-only)* |
-| REQ-F-OPS-02 | Sistem **boleh** menampilkan baris "berikutnya" di panel operator (seperti stage display ProPresenter), supaya operator siap-siap sebelum next line/lagu. | C *(selesai — NOW/NEXT ukuran besar, dibaca dari jarak 1-2 m)* |
+| REQ-F-OPS-01 | Sistem **sebaiknya** memisahkan tampilan **kontrol operator** (daftar lagu, tombol, slider) dari **preview output** (persis seperti yang dikirim ke Spout), supaya operator bisa cek visual tanpa buka Resolume. | S *(selesai, window Operator Display terpisah, bisa dipindah ke monitor lain & fullscreen; sengaja read-only)* |
+| REQ-F-OPS-02 | Sistem **boleh** menampilkan baris "berikutnya" di panel operator (seperti stage display ProPresenter), supaya operator siap-siap sebelum next line/lagu. | C *(selesai, NOW/NEXT ukuran besar, dibaca dari jarak 1-2 m)* |
 
 ### 4.7 Remote Control (`RC`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-RC-01 | Sistem **boleh** menerima trigger via **OSC** (Open Sound Control) untuk next/prev/blank/play/pause — memudahkan integrasi dengan controller fisik atau software lain (termasuk Resolume sendiri yang punya OSC out). | C *(terpasang — 13 alamat, parser sendiri tanpa dependency. **Terbukti dari pengirim UDP buatan sendiri; belum dari controller atau software nyata.** §3.10, utang verifikasi V1 di §3.13)* |
-| REQ-F-RC-02 | Sistem **boleh** menerima trigger via **MIDI** (mis. dari MIDI foot controller) untuk aksi yang sama seperti di atas. | C *(terpasang — `python-rtmidi` opsional. Port terbuka pada device nyata dan logika callback terbukti, tapi **tekan pad sungguhan belum pernah diuji.** §3.10, utang verifikasi V2 di §3.13)* |
+| REQ-F-RC-01 | Sistem **boleh** menerima trigger via **OSC** (Open Sound Control) untuk next/prev/blank/play/pause, memudahkan integrasi dengan controller fisik atau software lain (termasuk Resolume sendiri yang punya OSC out). | C *(terpasang, 13 alamat, parser sendiri tanpa dependency. **Terbukti dari pengirim UDP buatan sendiri; belum dari controller atau software nyata.** §3.10, utang verifikasi V1 di §3.13)* |
+| REQ-F-RC-02 | Sistem **boleh** menerima trigger via **MIDI** (mis. dari MIDI foot controller) untuk aksi yang sama seperti di atas. | C *(terpasang, `python-rtmidi` opsional. Port terbuka pada device nyata dan logika callback terbukti, tapi **tekan pad sungguhan belum pernah diuji.** §3.10, utang verifikasi V2 di §3.13)* |
 
 ### 4.8 Settings & Persistence (`CFG`)
 
 | ID | Requirement | Prioritas |
 |---|---|---|
-| REQ-F-CFG-01 | Sistem **harus** mengingat pengaturan terakhir (nama Spout sender, resolusi, font size default) antar sesi. | M *(selesai — `settings.json`, tersimpan otomatis tanpa tombol Simpan)* |
+| REQ-F-CFG-01 | Sistem **harus** mengingat pengaturan terakhir (nama Spout sender, resolusi, font size default) antar sesi. | M *(selesai, `settings.json`, tersimpan otomatis tanpa tombol Simpan)* |
 | REQ-F-CFG-02 | Sistem **harus** menyimpan lokasi library & show file default yang bisa dikonfigurasi user. | S *(selesai untuk library; path shows tersimpan tapi baru dipakai Fase 2)* |
+
+### 4.9 Donasi & Kontak (`DON`)
+
+| ID | Requirement | Prioritas |
+|---|---|---|
+| REQ-F-DON-01 | Sistem **boleh** menyediakan tab donasi berisi tautan Saweria dan kode QRIS yang bisa dipindai dari layar. | C *(selesai, §3.15)* |
+| REQ-F-DON-02 | Semua nilai donasi dan kontak **harus** berada di satu blok konfigurasi supaya hasil fork gampang mengganti milik orang lain. | M *(selesai, bagian atas `ui/donate_view.py`)* |
 
 ---
 
@@ -1162,7 +1432,7 @@ disempurnakan saat implementasi di Claude Code.
 ```
 Field `layout` disiapkan sebagai enum (`scroll_multiline` | `single_line`)
 supaya mode single-line v0.1 tetap bisa dipilih sebagai opsi alternatif,
-bukan dihapus total — beberapa operator mungkin tetap lebih suka gaya
+bukan dihapus total, beberapa operator mungkin tetap lebih suka gaya
 lower-third yang lebih minimalis untuk visual tertentu.
 
 ### 5.4 `Settings` (global, per instalasi)
@@ -1186,7 +1456,7 @@ lower-third yang lebih minimalis untuk visual tertentu.
 |---|---|---|
 | REQ-NF-01 | Performance | Frame yang dikirim ke Spout **harus** stabil di target fps (default 30) tanpa drop terlihat, dengan CPU usage rendah saat teks tidak berubah (leverage caching frame yang sudah ada). |
 | REQ-NF-02 | Latency | Perubahan baris lirik (baik dari auto-timestamp maupun manual next/prev) **harus** terlihat di Resolume dalam < 100ms. |
-| REQ-NF-03 | Reliability | Jika koneksi ke LRCLIB gagal/timeout, aplikasi **tidak boleh** crash — tampilkan pesan error dan tetap bisa lanjut pakai lirik manual/library lokal. |
+| REQ-NF-03 | Reliability | Jika koneksi ke LRCLIB gagal/timeout, aplikasi **tidak boleh** crash, tampilkan pesan error dan tetap bisa lanjut pakai lirik manual/library lokal. |
 | REQ-NF-04 | Reliability | Thread Spout output **harus** bisa dihentikan bersih (tanpa hang) saat user klik Stop atau tutup aplikasi. |
 | REQ-NF-05 | Usability | Operator baru **harus** bisa cari → muat → tampilkan lagu pertama dalam < 2 menit tanpa baca manual (target onboarding). |
 | REQ-NF-06 | Portability | Modul non-Spout (pencarian, parsing, playlist, data model) **harus** tetap bisa dijalankan/diuji di non-Windows untuk kemudahan development di Claude Code, walau fitur Spout sendiri hanya aktif di Windows. |
@@ -1200,7 +1470,7 @@ lower-third yang lebih minimalis untuk visual tertentu.
 
 | Interface | Tipe | Detail |
 |---|---|---|
-| LRCLIB API | REST/HTTP, JSON | `GET /api/search`, `GET /api/get/{id}`, `GET /api/get` — tanpa API key |
+| LRCLIB API | REST/HTTP, JSON | `GET /api/search`, `GET /api/get/{id}`, `GET /api/get`, tanpa API key |
 | Spout (Resolume) | Local GPU texture share (SpoutGL) | Sender name dikonfigurasi user; frame RGBA |
 | Filesystem | Baca/tulis JSON lokal | Library lagu, Show, Template, Settings |
 | (Fase lanjut) OSC | UDP, protokol OSC | Untuk remote trigger next/prev/blank |
@@ -1255,13 +1525,13 @@ ui/  ──→  store/  ──→  inti (player_state, render_style, scroll_anim
 - `store/*`, `remote/*`, dan seluruh modul inti **dilarang** meng-import
   `PySide6` maupun `SpoutGL` (REQ-NF-06/07).
 - **Catatan penamaan (v0.3):** folder kode persistence dinamai `store/`,
-  bukan `data/` — karena `data/` sudah dipakai §5.4 sebagai lokasi *file*
+  bukan `data/`, karena `data/` sudah dipakai §5.4 sebagai lokasi *file*
   JSON. Dua hal berbeda tidak boleh berbagi nama.
 - **Lokasi file data pindah** dari `./data/` ke
   `%APPDATA%\CUEVO Lyrics\`, supaya tetap benar setelah aplikasi
   di-package jadi `.exe` (folder instalasi biasanya read-only). Nama
   folder ini sebelumnya `LyricSpout\` (nama produk lama); `migrate_legacy_data()`
-  memindahkannya otomatis sekali saat startup — lihat §3.8.
+  memindahkannya otomatis sekali saat startup, lihat §3.8.
 
 ---
 
@@ -1269,16 +1539,16 @@ ui/  ──→  store/  ──→  inti (player_state, render_style, scroll_anim
 
 | Fase | Fokus | Requirement terkait |
 |---|---|---|
-| **Fase 0 — Selesai** | MVP single-song, single-line, kontrol manual, output Spout | Baseline §3 |
-| **Fase 0.5 — Port UI & perbaikan renderer** ✅ *selesai & terverifikasi (v0.5)* | Tkinter → PySide6, perbaikan bug §3.1, `ScrollAnimator`/`RenderStyle` dipakai bersama, preview satu jalur render, search satu kolom | ADR-001, §3.1, REQ-F-OUT-08, REQ-F-LIB-01 |
-| **Fase 1 — Persistence & Lirik Manual** ✅ *selesai & terverifikasi (v0.4)* | Library lokal, editor lirik manual/impor `.lrc`, Settings tersimpan | REQ-F-LIB-03/04/05/06/07/08, REQ-F-CFG-01/02 |
-| **Fase 2 — Show/Set list** ✅ *selesai (v0.6)* | Susun & simpan playlist, navigasi next/prev lagu, mode next-line manual | REQ-F-SET-01…05, REQ-F-PLAY-04/05 |
-| **Fase 3 — Styling dari GUI** ✅ *selesai (v0.7)* | Panel pengaturan visual, Template tersimpan & reusable | REQ-F-STYLE-01/02/03, REQ-F-OUT-05 |
-| **Fase 4 — Operator Experience** ✅ *selesai (v0.8)* | Preview terpisah, hotkey global, pengaturan scroll dari GUI | REQ-F-OPS-01/02, REQ-F-PLAY-06/07, REQ-F-OUT-05 |
-| **Fase 5 — Remote & Interop** 🔶 *sebagian (v0.9)* | OSC & MIDI terpasang tapi **belum diuji dengan perangkat nyata** (§3.13); NDI dan multi-sender dievaluasi lalu ditunda dengan alasan tertulis | REQ-F-RC-01/02 terpasang · REQ-F-OUT-06/07 ditunda |
+| **Fase 0, Selesai** | MVP single-song, single-line, kontrol manual, output Spout | Baseline §3 |
+| **Fase 0.5, Port UI & perbaikan renderer** ✅ *selesai & terverifikasi (v0.5)* | Tkinter → PySide6, perbaikan bug §3.1, `ScrollAnimator`/`RenderStyle` dipakai bersama, preview satu jalur render, search satu kolom | ADR-001, §3.1, REQ-F-OUT-08, REQ-F-LIB-01 |
+| **Fase 1, Persistence & Lirik Manual** ✅ *selesai & terverifikasi (v0.4)* | Library lokal, editor lirik manual/impor `.lrc`, Settings tersimpan | REQ-F-LIB-03/04/05/06/07/08, REQ-F-CFG-01/02 |
+| **Fase 2, Show/Set list** ✅ *selesai (v0.6)* | Susun & simpan playlist, navigasi next/prev lagu, mode next-line manual | REQ-F-SET-01…05, REQ-F-PLAY-04/05 |
+| **Fase 3, Styling dari GUI** ✅ *selesai (v0.7)* | Panel pengaturan visual, Template tersimpan & reusable | REQ-F-STYLE-01/02/03, REQ-F-OUT-05 |
+| **Fase 4, Operator Experience** ✅ *selesai (v0.8)* | Preview terpisah, hotkey global, pengaturan scroll dari GUI | REQ-F-OPS-01/02, REQ-F-PLAY-06/07, REQ-F-OUT-05 |
+| **Fase 5, Remote & Interop** 🔶 *sebagian (v0.9)* | OSC & MIDI terpasang tapi **belum diuji dengan perangkat nyata** (§3.13); NDI dan multi-sender dievaluasi lalu ditunda dengan alasan tertulis | REQ-F-RC-01/02 terpasang · REQ-F-OUT-06/07 ditunda |
 
 Rekomendasi urutan kerja di Claude Code: selesaikan Fase 1 & 2 dulu
-(paling terasa manfaatnya untuk pemakaian nyata di lapangan — bisa
+(paling terasa manfaatnya untuk pemakaian nyata di lapangan, bisa
 nyimpen lagu & bikin set list), baru masuk ke styling dan fitur
 "ProPresenter-like" lain yang sifatnya penyempurnaan pengalaman.
 
@@ -1294,7 +1564,7 @@ nyimpen lagu & bikin set list), baru masuk ke styling dan fitur
 | Scope creep menuju "ProPresenter penuh" | Timeline molor, kompleksitas naik drastis | Tetap disiplin ke scope §1.2; modul baru (Bible, media, dsb.) eksplisit di luar scope kecuali direvisi dokumen ini |
 | Isu trademark/branding kalau nama produk terlalu mirip ProPresenter | Potensi masalah hukum ringan | Pilih nama produk sendiri yang jelas berbeda; hindari klaim "compatible with ProPresenter" |
 | **Status "selesai" ditulis untuk kode yang belum pernah dijalankan** (terbukti di §3.1) | Requirement dianggap beres padahal cacat; keputusan lanjutan dibangun di atas asumsi salah | Status hanya boleh naik ke ✅ setelah dijalankan. Pakai status antara: `implemented, unverified`. Semua item bertanda itu wajib diverifikasi di Windows sebelum Fase 3 |
-| **Preview GUI dan output Spout berpotensi menyimpang** | Panel Style jadi tidak bisa dipercaya — operator menyetel sesuatu yang berbeda dari yang tayang | REQ-F-OUT-08: saat live, preview memakai buffer yang sama persis; tidak ada render kedua (§3.2) |
+| **Preview GUI dan output Spout berpotensi menyimpang** | Panel Style jadi tidak bisa dipercaya, operator menyetel sesuatu yang berbeda dari yang tayang | REQ-F-OUT-08: saat live, preview memakai buffer yang sama persis; tidak ada render kedua (§3.2) |
 | **Operator memilih font kecil di panel Style (Fase 3)** | Font ≤20px jatuh ke sisi lambat Pillow (5× lebih mahal) → fps anjlok saat animasi, padahal status strip terlihat normal | Panel Style harus memperingatkan di bawah ~22px; ukur ulang §3.2 saat Fase 3 dikerjakan |
 | **Headroom performa tinggal ~22%** | Penambahan efek visual apa pun bisa langsung menembus budget 33,3 ms | Setiap perubahan renderer wajib disertai pengukuran ulang, bukan perkiraan |
 
@@ -1307,12 +1577,12 @@ fase berikutnya:
 
 - [x] `store/library.py`: `upsert()`, `get()`, `list_songs()`, `search()`,
       `delete()`, baca/tulis atomik ke `library.json`. *(folder dinamai
-      `store/`, bukan `data/` — lihat §8)*
+      `store/`, bukan `data/`, lihat §8)*
 - [x] Editor Lirik Manual: textarea untuk tempel teks + tombol TAP
       (`Enter`) untuk menandai waktu baris berikutnya sambil lagu diputar
-      di aplikasi lain — cara kerja software karaoke sederhana.
+      di aplikasi lain, cara kerja software karaoke sederhana.
 - [x] Import `.lrc` lokal dari file picker (multi-select), parse pakai
-      `lrc_parser.py` yang sudah ada — parser tidak diubah, hanya
+      `lrc_parser.py` yang sudah ada, parser tidak diubah, hanya
       *ditambah* `format_lrc()` untuk arah sebaliknya.
 - [x] `Settings` disimpan ke `settings.json`, dibaca saat start-up
       (nama sender, resolusi, fps, path library).
@@ -1355,13 +1625,13 @@ Untuk referensi saat menerjemahkan fitur ke versi lite:
 - **Themes/Templates** → REQ-F-STYLE-02/03.
 
 Semua padanan di atas adalah **kesamaan konsep tingkat fitur**, bukan
-kesamaan implementasi/kode — sesuai catatan legal di §1.3.
+kesamaan implementasi/kode, sesuai catatan legal di §1.3.
 
 ---
 
 ## 13. Log Keputusan Arsitektur (ADR)
 
-### ADR-001 — Stack GUI: PySide6, bukan Tauri atau C#
+### ADR-001, Stack GUI: PySide6, bukan Tauri atau C#
 **Tanggal:** 2026-08-31 · **Status:** Diterima
 
 **Konteks.** Tkinter tidak menyediakan drag-reorder, color/font picker,
@@ -1379,41 +1649,40 @@ itulah yang memutuskan.
 | C# WPF/Avalonia | Satu GPU surface melayani preview & Spout sekaligus | ⚠️ Cadangan |
 | Tauri | Encode + IPC tiap frame ke WebView2 | ❌ Ditolak |
 
-**Kenapa Tauri ditolak — kalah dua arah:**
+**Kenapa Tauri ditolak, kalah dua arah:**
 1. *UI → Spout:* surface WebView2 tidak bisa di-capture jadi texture Spout,
    jadi tampilan HTML/CSS tidak bisa dijadikan output. Ini blocker
    arsitektural, bukan soal effort.
 2. *Renderer → UI:* frame harus di-encode dan lewat IPC 30×/detik.
 
-Artinya renderer terpisah tetap harus ditulis, **plus** bayar overhead —
-tanpa satu pun keunggulan web menyentuh bagian yang sulit.
+Artinya renderer terpisah tetap harus ditulis, **plus** bayar overhead, tanpa satu pun keunggulan web menyentuh bagian yang sulit.
 
 **Konsekuensi.** Hanya `app.py` yang diganti; `lrclib_client`,
 `lrc_parser`, `player_state` tidak disentuh. Semua modul inti tetap bebas
 GUI (REQ-NF-06).
 
-**Pemicu peninjauan ulang (ke C#) — kondisi terukur, bukan selera:**
+**Pemicu peninjauan ulang (ke C#), kondisi terukur, bukan selera:**
 - Pillow terbukti tidak sanggup 30 fps di Windows (REQ-NF-01 gagal), **atau**
 - aplikasi perlu didistribusikan sebagai `.exe` mandiri ke pengguna lain.
 
 Mockup di `MOCKUP.html` sengaja tidak memakai idiom khas Qt, jadi tetap
 berlaku 100% kalau pemicu di atas terjadi.
 
-### ADR-002 — Preview dan Spout wajib satu jalur render
+### ADR-002, Preview dan Spout wajib satu jalur render
 **Tanggal:** 2026-08-31 · **Status:** Diterima
 
 Menduplikasi logika animasi di GUI dan di thread Spout akan menyimpang
 seiring waktu. Karena itu state machine posisi scroll diekstrak ke
 `scroll_anim.ScrollAnimator` dan seluruh parameter visual ke
 `render_style.RenderStyle`. Keduanya dipakai bersama oleh `SpoutOutputThread`
-dan widget preview — perbedaannya **hanya** faktor skala resolusi lewat
+dan widget preview, perbedaannya **hanya** faktor skala resolusi lewat
 `RenderStyle.scaled()`. Diformalkan sebagai REQ-F-OUT-08.
 
-### ADR-003 — Pencarian satu kolom query bebas
+### ADR-003, Pencarian satu kolom query bebas
 **Tanggal:** 2026-08-31 · **Status:** Diterima
 
 Dua kolom (judul + artis) memaksa operator mengklasifikasikan input sebelum
 mencari, dan salah taruh menghasilkan nol hasil. LRCLIB sudah menyediakan
 parameter `q` untuk pencarian bebas, dan `lrclib_client.search()` sudah
-mendukungnya sejak v0.1 — jadi perubahan ini **nol biaya di sisi backend**.
+mendukungnya sejak v0.1, jadi perubahan ini **nol biaya di sisi backend**.
 Mendukung REQ-NF-05 (onboarding <2 menit).

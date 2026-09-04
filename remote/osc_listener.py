@@ -66,7 +66,7 @@ def address_help():
 def _read_string(data, offset):
     end = data.find(b"\x00", offset)
     if end < 0:
-        raise ValueError("string OSC tidak diakhiri null")
+        raise ValueError("OSC string is not null-terminated")
     text = data[offset:end].decode("utf-8", "replace")
     # setiap blok di-pad ke kelipatan 4 byte
     return text, offset + (len(text) // 4 + 1) * 4
@@ -163,7 +163,7 @@ class OscListener(threading.Thread):
         self.on_activity = on_activity   # dipanggil utk SEMUA pesan, buat indikator
         self._socket = None
         self._stop = threading.Event()
-        self.status = "belum dimulai"
+        self.status = "not started"
         self.last_address = None
 
     def start_listening(self):
@@ -188,10 +188,10 @@ class OscListener(threading.Thread):
             self._socket.settimeout(0.3)
         except OSError as exc:
             self._socket = None
-            self.status = f"gagal: {exc}"
+            self.status = f"failed: {exc}"
             return False, str(exc)
 
-        self.status = f"mendengarkan di UDP {self.port}"
+        self.status = f"listening on UDP {self.port}"
         self.start()
         return True, None
 
@@ -228,4 +228,4 @@ class OscListener(threading.Thread):
             if self.on_command is not None:
                 self.on_command(command, args)
 
-        self.status = "berhenti"
+        self.status = "stopped"

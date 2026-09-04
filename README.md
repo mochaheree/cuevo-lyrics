@@ -1,159 +1,256 @@
 # CUEVO Lyrics
 
-Aplikasi desktop (Python + PySide6) untuk menampilkan lirik lagu secara
-live ke Resolume Arena lewat **Spout**. Cari lirik di [LRCLIB](https://lrclib.net),
-susun jadi Show/Set list, sesuaikan tampilannya, lalu kontrol saat acara
-berjalan — semuanya dari satu window.
+Send time-synced song lyrics straight into Resolume Arena over **Spout**.
 
-> Riwayat lengkap keputusan desain, bug yang ditemukan, dan hasil
-> pengujiannya ada di `SRS.md` (living document). README ini cuma
-> ringkasan cara pakai.
+Search lyrics on [LRCLIB](https://lrclib.net) or type them yourself, build a
+set list, style the output, and run the whole thing from one window while the
+show is live.
 
-Alur data:
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Windows](https://img.shields.io/badge/Spout-Windows%20only-lightgrey)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 
 ```
-[Cari di LRCLIB / library lokal / editor manual] -> [parser LRC: baris + timestamp]
-        -> [Show: susun urutan lagu]           -> [kontrol Live: Play/Pause/Next/Blank]
-        -> [render scroll multi-baris + animasi, RGBA transparan]
-        -> [SpoutGL sendImage] -> [Resolume Arena: Sources > Spout]
+[LRCLIB search / local library / manual editor]  ->  [LRC parser: lines + timestamps]
+    ->  [Show: order the songs]                  ->  [Live: play, pause, next, blank]
+    ->  [multi-line scroll render, transparent RGBA]
+    ->  [SpoutGL]  ->  [Resolume Arena: Sources > Spout]
 ```
 
-Sync-nya **manual**: tekan Play saat lagu mulai, koreksi dengan tombol
-offset (`-0.5s`/`-0.1s`/`+0.1s`/`+0.5s`) kalau lirik terasa maju/mundur.
-Ada juga **mode manual per-baris** untuk lagu tanpa tempo tetap (acapella,
-rubato) — baris berpindah hanya saat kamu tekan Next/Prev, jam diabaikan.
+## Download
 
-Tampilan: mode scroll multi-baris ala Musixmatch (baris aktif menonjol,
-sekitarnya mengecil/memudar, berpindah dengan animasi halus) atau mode
-single-line — keduanya diatur dari panel Style, tanpa edit kode.
+Grab the latest build from the [Releases page](https://github.com/mochaheree/cuevo-lyrics/releases).
+Unzip it anywhere and run `CUEVO Lyrics.exe`. No installer, and nothing is
+written outside your user folder.
 
-## Kebutuhan sistem
+Windows may show a SmartScreen warning the first time, because the build is
+not code signed. Click **More info**, then **Run anyway**. If you would rather
+not trust a binary from a stranger, run it from source instead. That is the
+whole point of it being open.
 
-- **Windows** untuk fitur Spout (teknologi sharing tekstur GPU khusus
-  Windows). Di OS lain aplikasi tetap bisa dibuka untuk cari/susun/edit
-  lirik, hanya tombol "Mulai output" yang nonaktif.
-- Python 3.9+ 64-bit.
-- Resolume Arena versi apa pun yang mendukung Spout receiver.
+## What it does
 
-## Instalasi
+**Timing is manual, on purpose.** You press Play when the song starts, and
+nudge it with the offset buttons (`-0.5s` / `-0.1s` / `+0.1s` / `+0.5s`) if the
+lyrics drift. There is no audio listening and no beat detection. For songs
+with no steady tempo, acapella or rubato, there is a **manual line mode**:
+lines only move when you press Next or Prev, and the clock is ignored
+entirely.
+
+**The output looks like a lyrics app, not a text box.** Multi-line scroll in
+the style of Musixmatch: the active line stands out, the lines around it
+shrink and fade, and everything glides between positions. Or single line mode
+if you want a lower third. Both are set in the Style tab, no code editing.
+
+**It keeps working offline.** Once a song is in your local library, LRCLIB
+being unreachable does not stop the show.
+
+## Requirements
+
+- **Windows** for Spout output. Spout is a Windows-only GPU texture sharing
+  technology. On other systems the app still opens and you can search, edit
+  and organise lyrics, but the "Start output" button stays disabled.
+- Python 3.9 or newer, 64-bit, if you run from source.
+- Any Resolume Arena version with a Spout receiver.
+
+## Running from source
 
 ```powershell
 pip install -r requirements.txt
-```
-
-Kalau instalasi `SpoutGL` gagal, biasanya versi Python 32-bit vs 64-bit
-tidak cocok dengan wheel yang tersedia — pastikan pakai Python 64-bit
-resmi dari python.org.
-
-## Menjalankan
-
-```powershell
 python main.py
 ```
 
-Window utama punya status strip di atas (nama sender, resolusi, fps
-aktual, progres show, tombol Mulai/Stop output) dan lima tab:
+If `SpoutGL` fails to install, it is almost always a 32-bit Python trying to
+install a 64-bit wheel. Use the official 64-bit build from python.org.
 
-### Live
-Layar utama saat acara berjalan. Tiga kolom: set list lagu di kiri, baris
-lirik lagu yang sedang dimuat di tengah (klik = lompat ke situ), dan
-preview persis apa yang dikirim ke Resolume di kanan. Transport di bawah:
-Play/Pause/Next/Prev, offset sync, **BLANK** (kill switch — mengosongkan
-output tanpa mengubah posisi waktu), dan toggle mode Auto/Manual.
+## Building the executable
 
-Hotkey: `Space` play/pause, `←`/`→` baris sebelum/berikutnya, `B` blank.
+```powershell
+pip install pyinstaller
+pyinstaller --noconfirm "CUEVO Lyrics.spec"
+```
 
-### Library
-Cari lirik dari dua sumber — **LRCLIB** (online, satu kolom pencarian
-bebas: judul/artis/keduanya, urutan bebas) atau **Library lokal**
-(tersimpan, tetap jalan offline). Dari sini juga: impor `.lrc`, buka
-editor lirik manual, simpan ke library, dan **tambah ke show** yang
-sedang dibuka.
+The result lands in `dist/CUEVO Lyrics/`. The spec copies the whole `assets/`
+folder into the build, which is where the app icon and the donation QR live.
 
-### Show
-Susun Show/Set list: tambah lagu dari library, urutkan lewat drag, simpan
-ke file (`.showproject.json`, satu file per show), buka show tersimpan.
-Navigasi lagu saat live dilakukan dari tab Live, bukan di sini — supaya
-urutan tidak tersenggol tanpa sengaja saat acara jalan.
+## Connecting to Resolume Arena
 
-### Style
-Semua pengaturan visual: layout (scroll multiline / single line), font
-(dari katalog font sistem), ukuran, warna teks & outline, jarak baris,
-falloff ukuran/opacity, edge fade, kecepatan transisi, jumlah baris
-konteks. Perubahan langsung tayang, termasuk saat output sedang jalan.
-Simpan sebagai **Template** untuk dipakai ulang, atau pilih dari 5 preset
-bawaan. **Klik kanan pada kontrol mana pun untuk kembalikan ke default**
-(mengikuti kebiasaan Resolume Arena); parameter yang sudah diubah ditandai
-titik di labelnya.
+1. Press **Start output** in CUEVO Lyrics. The status strip switches from
+   **IDLE** to **ON AIR**.
+2. In Resolume, right-click a layer, a clip, or an empty slot.
+3. Pick **Sources > Spout**.
+4. Choose the sender name shown in the Settings tab. The default is
+   `CUEVO Lyrics`.
 
-### Settings
-Nama Spout sender, resolusi & fps output, lokasi file library/shows,
-daftar hotkey. Tersimpan otomatis begitu kolom ditinggalkan.
+The lyrics arrive as a clip with a transparent background, so you can stack
+them over whatever else your set is running.
 
-## Menghubungkan ke Resolume Arena
+## The tabs
 
-1. Klik kanan pada sebuah **layer/clip** (atau slot kosong) di Resolume.
-2. Pilih **Sources > Spout**.
-3. Pilih sender dengan nama yang sama seperti di tab Settings (default
-   `CUEVO Lyrics`).
-4. Lirik muncul sebagai clip berbackground transparan — tinggal ditumpuk
-   di atas visual lain sesuai kebutuhan set kamu.
+**Live** is where you spend the show. Set list on the left, the loaded song's
+lines in the middle (click any line to jump to it), and on the right a preview
+of exactly what Resolume is receiving. Transport sits along the bottom: play,
+pause, next, prev, sync offset, the Auto/Manual switch, and **BLANK**, a kill
+switch that empties the output without losing your place in the song.
 
-## Struktur kode
+Shortcuts: `Space` play/pause, `Left`/`Right` for previous and next line,
+`B` for blank.
+
+**Library** searches LRCLIB through a single free-form box. Title, artist, or
+both, in any order. It also holds your saved songs, imports `.lrc` files,
+opens the manual lyric editor, and adds songs to the show you have open.
+
+**Show** builds the set list. Add from the library, drag to reorder, save to a
+`.showproject.json` file, reopen it later. Song navigation during a show
+happens in the Live tab rather than here, so you cannot knock the running
+order out of place mid-set.
+
+**Style** controls everything visual: layout, font from your system fonts,
+size, text and outline colour, line spacing, size and opacity falloff, edge
+fade, transition speed, and how many context lines to show. Changes are live
+as you make them, including while output is running. Save what you like as a
+Template, or start from one of the five presets. **Right-click any control to
+reset it to its default**, the same way Resolume Arena behaves. Controls you
+have changed get a dot next to their label.
+
+**Settings** covers the Spout sender name, output resolution and fps, where
+your library and shows live, and the shortcut list. It saves as soon as you
+leave a field.
+
+**Donate** has the Saweria link, a QRIS code, and contact links.
+
+## Casting to OBS, TikTok Live, or a second screen
+
+The **Cast** button in the status strip opens a separate output window. One
+window covers all three cases, because all three want the same thing:
+something capturable.
+
+| Goal | How |
+|---|---|
+| **OBS, best quality** | Install the Spout2 plugin for OBS, add a Spout source, pick the `CUEVO Lyrics` sender. Real alpha comes through, no chroma key needed. The Cast window is not involved. |
+| **OBS, no plugin** | Cast window, **Chroma green** background, then Window Capture plus a Chroma Key filter in OBS. |
+| **TikTok Live Studio** | Cast window, **Chroma green** or **Magenta**, then Screen or Window Capture. TikTok Live Studio does not know about Spout. |
+| **Second screen or projector** | Cast window, **Black** background, pick the monitor, go full screen. |
+
+**Hide bar** strips the window frame so the capture stays clean. While it is
+hidden: right-click for the menu, drag to move the window, `Esc` to bring the
+bar back.
+
+> **Read this before chroma keying.** Context lines fade using alpha, and
+> alpha does not survive Window Capture, because Windows composites the window
+> over an opaque background first. The faded lines end up tinted with your
+> background colour and get keyed away along with it. The app detects this and
+> offers a **Zero out opacity falloff** button that fixes it. The line
+> hierarchy still reads through size falloff alone. None of this applies if
+> you use the Spout2 plugin in OBS.
+
+## Project layout
 
 ```
-main.py                    entry point
-app.py                     QMainWindow: status strip + tabs
+main.py                  entry point
+app.py                   QMainWindow: status strip and tabs
 
-# inti, bebas GUI & bebas Spout (testable di OS mana pun)
-lrclib_client.py           panggilan HTTP ke API LRCLIB
-lrc_parser.py               parse & format LRC, cari baris aktif
-player_state.py             status play/pause/posisi/offset/blank, thread-safe
-render_style.py             RenderStyle -- semua parameter visual, bisa di-scaled()
-scroll_anim.py               ScrollAnimator -- state machine posisi scroll
-show_session.py              ShowSession -- show yang sedang dipakai saat live
+# core, no GUI and no Spout, runs anywhere
+lrclib_client.py         HTTP calls to the LRCLIB API
+lrc_parser.py            parse and format LRC, find the active line
+player_state.py          play/pause/position/offset/blank, thread safe
+render_style.py          RenderStyle, every visual parameter, scalable
+scroll_anim.py           ScrollAnimator, scroll position state machine
+show_session.py          ShowSession, the show currently on air
 
-# render & output
-spout_output.py              MultiLineLyricRenderer + SpoutOutputThread
-font_catalog.py              220-an font sistem -> path yang dijamin bisa dimuat Pillow
+# render and output
+spout_output.py          MultiLineLyricRenderer and SpoutOutputThread
+font_catalog.py          system fonts mapped to paths Pillow can actually load
 
-store/                       persistence, semua di %APPDATA%\CUEVO Lyrics\
-  paths.py                     lokasi file, baca/tulis JSON atomik, migrasi nama lama
-  library.py                   CRUD Song
-  shows.py                     CRUD Show (satu file per show)
-  templates.py                 CRUD Template + 5 preset bawaan
-  settings.py                  Settings per-instalasi
+store/                   persistence, all under %APPDATA%\CUEVO Lyrics\
+  paths.py                 file locations, atomic JSON writes, legacy migration
+  library.py               Song CRUD
+  shows.py                 Show CRUD, one file per show
+  templates.py             Template CRUD plus five built-in presets
+  settings.py              per-installation settings
 
-ui/                           PySide6, satu file per tab
-  theme.py                     design token -> QSS, helper theme.paint()
-  preview.py                   widget preview -- pakai frame yang sama dgn Spout
+ui/                      PySide6, roughly one file per tab
+  theme.py                 design tokens to QSS, theme.paint() helper
+  preview.py               preview widget, same frames Spout sends
   live_view.py / library_view.py / show_view.py / style_view.py / settings_view.py
-  lyric_editor.py              editor tap-to-timestamp
+  lyric_editor.py          tap-to-timestamp editor
+  operator_view.py         NOW/NEXT window for a second monitor
+  cast_window.py           capture window for OBS, TikTok, second screen
+  donate_view.py           donation tab, all values in one block at the top
+
+design/                  source artwork, deliberately not bundled into the exe
 ```
 
-Prinsip ketergantungan (satu arah): `ui/` -> `store/` -> inti. Modul inti
-dan `store/` dilarang meng-import `PySide6` maupun `SpoutGL`.
+Dependencies run one way: `ui/` uses `store/`, `store/` uses the core. Core
+modules and `store/` are not allowed to import `PySide6` or `SpoutGL`, which
+is what keeps them testable without a display.
 
-## Data & migrasi nama
+## Forking this
 
-Aplikasi ini sebelumnya bernama **Lyric Spout**. Kalau kamu punya data
-lama di `%APPDATA%\LyricSpout\`, folder itu otomatis dipindahkan ke
-`%APPDATA%\CUEVO Lyrics\` sekali saja saat pertama kali dijalankan setelah
-update ini — library dan show yang sudah tersimpan tidak hilang.
+Two things are mine and should not stay in your fork:
+
+1. The config block at the top of `ui/donate_view.py`. Saweria URL, QRIS
+   details, contact links. It is all in one place at the top of the file
+   precisely so you can replace it in seconds. Money landing in a stranger's
+   account because you missed a constant is an expensive kind of bug.
+2. `assets/qris.png`. Replace it with your own QR. Put the QR code itself in
+   there, not a full QRIS poster: a poster scaled down leaves the actual code
+   far too small to scan. Large QRIS codes need roughly 4 screen pixels per
+   module to stay readable, which is why the one in this app is displayed at
+   516px and never scaled.
+
+The app icon lives at `assets/app-icon.ico`, built from the artwork in
+`design/` and containing every size from 16 up to 256.
+
+## Where your data lives
+
+Everything is under `%APPDATA%\CUEVO Lyrics\`. Nothing is written into the
+program folder, and nothing leaves your machine except LRCLIB searches.
+
+The app used to be called **Lyric Spout**. If you have old data in
+`%APPDATA%\LyricSpout\`, it gets moved across once, automatically, the first
+time you run this version. Saved libraries and shows survive.
 
 ## Troubleshooting
 
-- **"SpoutGL/pygame belum terpasang..."** — jalankan ulang
-  `pip install -r requirements.txt` di Windows 64-bit.
-- **Resolume tidak melihat sender-nya** — pastikan "Mulai output" sudah
-  ditekan (status strip berubah jadi **ON AIR**, bukan **IDLE**), dan
-  window kecil pygame yang muncul belum ditutup (boleh diminimize).
-- **BLANK ditekan tapi Resolume masih menampilkan lirik** — sudah pernah
-  jadi bug (lihat SRS §3.3, diperbaiki v0.6); kalau muncul lagi di versi
-  yang lebih baru, laporkan.
-- **Lirik tidak ketemu di LRCLIB** — coba tanpa embel-embel seperti
-  "(Official Video)"; kolom pencarian menerima judul/artis dalam urutan
-  bebas jadi tidak perlu dipisah.
-- **Font terasa berat / fps turun saat animasi** — hindari ukuran font
-  efektif di bawah ~22px (lihat peringatan otomatis di panel Style);
-  ada tebing performa di Pillow/FreeType pada ukuran itu (SRS §3.2).
+**"SpoutGL/pygame not installed"** means the optional Windows packages are
+missing. Rerun `pip install -r requirements.txt` on 64-bit Windows.
+
+**Resolume cannot see the sender.** Check that you pressed Start output, so
+the status strip reads **ON AIR** rather than **IDLE**, and that the small
+pygame window is still open. Minimising it is fine, closing it is not.
+
+**Lyrics not found on LRCLIB.** Drop the extras like "(Official Video)". The
+search box takes title and artist together in any order, so there is no need
+to split them up.
+
+**Frame rate drops during animation.** Avoid effective font sizes below about
+22px. There is a performance cliff in Pillow and FreeType right around there,
+and the Style panel warns you when a setting is about to cross it.
+
+## Known limitations
+
+- OSC and MIDI remote control are built but have not been tested against real
+  hardware yet. See SRS section 3.13 for exactly what is unverified.
+- No audio analysis. Sync is manual by design.
+- Spout output is Windows only.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).
+
+Lyrics come from [LRCLIB](https://lrclib.net), which is community
+contributed. This project does not host, redistribute, or claim any rights to
+lyrics. Check the licensing of any lyrics you put on a screen in front of a
+paying audience.
+
+## Credits
+
+Built by [Gevan](https://github.com/mochaheree). Spout sharing through
+[SpoutGL](https://github.com/jlai/Python-SpoutGL), lyrics through
+[LRCLIB](https://lrclib.net), UI on [PySide6](https://doc.qt.io/qtforpython/).
+
+The full design history, every bug that was found and how it was found, and
+the measurements behind the decisions are in [SRS.md](SRS.md). It is written
+in Indonesian and it is long, but it is the honest record rather than a
+summary.

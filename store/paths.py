@@ -133,6 +133,24 @@ def _rewrite_stored_paths(new_dir: str, old_dir: str):
             pass   # settings tetap menunjuk path lama; lebih baik daripada crash
 
 
+def resource_path(*parts) -> str:
+    """
+    Cari file yang ikut dibundel bersama aplikasi (gambar, ikon).
+
+    Beda dari app_data_dir(): yang itu tempat data pengguna yang bisa berubah,
+    ini file bawaan yang cuma dibaca.
+
+    PyInstaller mengekstrak bundel ke folder sementara dan menaruh path-nya di
+    sys._MEIPASS. Kalau dijalankan langsung dari source, atribut itu tidak ada
+    dan patokannya folder project. Tanpa pembedaan ini, gambar yang tampil
+    normal saat development akan hilang begitu dibungkus jadi .exe.
+    """
+    base = getattr(sys, "_MEIPASS", None)
+    if base is None:
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, *parts)
+
+
 def settings_path() -> str:
     return os.path.join(app_data_dir(), "settings.json")
 
@@ -168,7 +186,7 @@ def read_json(path: str, fallback):
         with open(path, "r", encoding="utf-8") as handle:
             return json.load(handle), None
     except (json.JSONDecodeError, OSError, UnicodeDecodeError) as exc:
-        return fallback, f"{os.path.basename(path)} tidak terbaca ({exc})"
+        return fallback, f"{os.path.basename(path)} could not be read ({exc})"
 
 
 def write_json_atomic(path: str, data):

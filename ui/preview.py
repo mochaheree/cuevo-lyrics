@@ -50,6 +50,7 @@ class PreviewWidget(QWidget):
         self._source = None          # thread Spout, kalau sedang jalan
         self._last_frame_id = None
         self._mirror = None          # PreviewWidget lain yang framenya disalin
+        self._cast_background = None  # None = mode preview (kotak-kotak)
 
         self._rebuild_renderer()
         self.setMinimumHeight(120)
@@ -86,6 +87,19 @@ class PreviewWidget(QWidget):
         self._source = spout_thread
         self._last_frame_id = None
         self._animator.force_redraw()
+
+    def set_cast_background(self, color):
+        """
+        Ubah widget ini jadi permukaan siar (cast), bukan preview di dalam app.
+
+        `color` None berarti mode preview biasa: latar kotak-kotak yang
+        menandakan area transparan, plus tulisan BLANK saat output dikosongkan.
+        Kalau diisi QColor, widget menggambar latar polos itu saja dan tidak
+        menimpakan teks apa pun -- karena permukaan ini ikut terekam OBS atau
+        TikTok Live Studio, jadi apa pun yang digambar di sini akan tersiar.
+        """
+        self._cast_background = color
+        self.update()
 
     def set_mirror(self, other):
         """
@@ -194,14 +208,23 @@ class PreviewWidget(QWidget):
         x = rect.x() + (rect.width() - w) // 2
         y = rect.y() + (rect.height() - h) // 2
 
-        painter.fillRect(rect, QColor(theme.V1))
-        self._paint_checker(painter, x, y, w, h)
+        if self._cast_background is None:
+            painter.fillRect(rect, QColor(theme.V1))
+            self._paint_checker(painter, x, y, w, h)
+        else:
+            # Bilah letterbox ikut diwarnai sama supaya seluruh jendela satu
+            # warna. Kalau warnanya chroma key, bilahnya ikut terbuang bersama
+            # latarnya, bukan jadi garis hitam di tepi siaran.
+            painter.fillRect(rect, self._cast_background)
 
         if self._pixmap is not None:
             painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
             painter.drawPixmap(x, y, w, h, self._pixmap)
 
-        if self._is_blank():
+        # Teks BLANK hanya untuk mata operator. Di permukaan siar, blank
+        # artinya benar-benar kosong -- menulis "BLANK" di situ sama saja
+        # menyiarkan kata itu ke penonton.
+        if self._is_blank() and self._cast_background is None:
             painter.setPen(QColor(theme.LIVE))
             painter.drawText(x, y, w, h, Qt.AlignCenter, "BLANK")
 

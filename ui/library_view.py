@@ -72,7 +72,7 @@ class LibraryView(QWidget):
         root.addWidget(self.status)
 
         if self.library.load_error:
-            self._show_status(f"{self.library.load_error} — mulai dari library kosong.")
+            self._show_status(f"{self.library.load_error}. Starting with an empty library.")
         # notify=False: saat konstruktor, ShowView belum tersambung
         self.refresh_local_count(notify=False)
 
@@ -85,7 +85,7 @@ class LibraryView(QWidget):
         box.setContentsMargins(12, 8, 12, 8)
         box.setSpacing(14)
 
-        self.source_seg = SegmentedControl(["LRCLIB", "Library lokal"])
+        self.source_seg = SegmentedControl(["LRCLIB", "Local library"])
         self.online_radio = self.source_seg.button(0)
         self.local_radio = self.source_seg.button(1)
         self.online_radio.setChecked(True)
@@ -100,7 +100,7 @@ class LibraryView(QWidget):
         import_btn = QPushButton("Import .lrc")
         import_btn.setProperty("variant", "quiet")
         import_btn.clicked.connect(self.import_lrc)
-        manual_btn = QPushButton("Lagu manual")
+        manual_btn = QPushButton("Manual song")
         manual_btn.setProperty("variant", "quiet")
         manual_btn.clicked.connect(self.new_manual_song)
         box.addWidget(import_btn)
@@ -110,8 +110,8 @@ class LibraryView(QWidget):
     def _on_source_changed(self, online):
         self._source = SOURCE_ONLINE if online else SOURCE_LOCAL
         self.query.setPlaceholderText(
-            "judul, artis, atau keduanya — urutan bebas" if online
-            else "saring library lokal — kosongkan untuk melihat semua"
+            "title, artist, or both, in any order" if online
+            else "filter the local library, or leave empty to see everything"
         )
         self.search_btn.setVisible(online)
         self.status.hide()
@@ -133,12 +133,12 @@ class LibraryView(QWidget):
 
         self.query = QLineEdit()
         self.query.setProperty("role", "search")
-        self.query.setPlaceholderText("judul, artis, atau keduanya — urutan bebas")
+        self.query.setPlaceholderText("title, artist, or both, in any order")
         self.query.returnPressed.connect(self.search)
         self.query.textChanged.connect(self._on_query_changed)
         box.addWidget(self.query, 1)
 
-        self.search_btn = QPushButton("Cari")
+        self.search_btn = QPushButton("Search")
         self.search_btn.setMinimumWidth(72)
         self.search_btn.clicked.connect(self.search)
         box.addWidget(self.search_btn)
@@ -152,7 +152,7 @@ class LibraryView(QWidget):
 
     def _build_table(self):
         self.table = QTableWidget(0, 5)
-        self.table.setHorizontalHeaderLabels(["Judul", "Artis", "Album", "Durasi", "Lirik"])
+        self.table.setHorizontalHeaderLabels(["Title", "Artist", "Album", "Duration", "Lyrics"])
         self.table.verticalHeader().hide()
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -178,22 +178,22 @@ class LibraryView(QWidget):
         box.setContentsMargins(12, 8, 12, 8)
         box.setSpacing(7)
 
-        self.load_btn = QPushButton("Muat ke player")
+        self.load_btn = QPushButton("Load to player")
         self.load_btn.clicked.connect(self.load_selected)
-        self.save_btn = QPushButton("Simpan ke library")
+        self.save_btn = QPushButton("Save to library")
         self.save_btn.setProperty("variant", "quiet")
         self.save_btn.clicked.connect(self.save_selected)
-        self.edit_btn = QPushButton("Edit lirik")
+        self.edit_btn = QPushButton("Edit lyrics")
         self.edit_btn.setProperty("variant", "quiet")
         self.edit_btn.clicked.connect(self.edit_selected)
-        self.delete_btn = QPushButton("Hapus")
+        self.delete_btn = QPushButton("Delete")
         self.delete_btn.setProperty("variant", "quiet")
         self.delete_btn.clicked.connect(self.delete_selected)
 
         for btn in (self.load_btn, self.save_btn, self.edit_btn, self.delete_btn):
             box.addWidget(btn)
 
-        self.show_btn = QPushButton("Tambah ke show")
+        self.show_btn = QPushButton("Add to show")
         self.show_btn.setProperty("variant", "quiet")
         self.show_btn.clicked.connect(self.add_to_show)
         box.addWidget(self.show_btn)
@@ -218,11 +218,11 @@ class LibraryView(QWidget):
 
         query = self.query.text().strip()
         if not query:
-            self._show_status("Ketik dulu sesuatu untuk dicari.")
+            self._show_status("Type something to search for first.")
             return
 
         self.search_btn.setEnabled(False)
-        self.search_btn.setText("Mencari…")
+        self.search_btn.setText("Searching…")
         self.status.hide()
 
         def worker():
@@ -237,21 +237,21 @@ class LibraryView(QWidget):
 
     def _reset_search_button(self):
         self.search_btn.setEnabled(True)
-        self.search_btn.setText("Cari")
+        self.search_btn.setText("Search")
 
     def _on_results(self, results):
         self._reset_search_button()
         self._rows = results
         self._fill_table([self._online_cells(item) for item in results])
         if not results:
-            self._show_status("Tidak ada hasil. Coba kata kunci lain.")
+            self._show_status("No results. Try different keywords.")
 
     def _on_failed(self, message):
         self._reset_search_button()
         # REQ-NF-03: gagal jaringan tidak boleh mematikan aplikasi
         self._show_status(
-            f"LRCLIB tidak terjangkau ({message}). "
-            f"Library lokal tetap bisa dipakai — pindah ke sumber “Library lokal”."
+            f"LRCLIB unreachable ({message}). "
+            f"Your local library still works. Switch the source to “Local library”."
         )
 
     def _online_cells(self, item):
@@ -261,12 +261,12 @@ class LibraryView(QWidget):
         elif item.get("plainLyrics"):
             lyric, color = "○ plain", theme.T3
         else:
-            lyric, color = "— kosong", theme.T4
+            lyric, color = "no lyrics", theme.T4
         saved = self.library.find_by_lrclib_id(item.get("id")) is not None
         return [
             (item.get("trackName") or "?", theme.T1),
             (item.get("artistName") or "?", theme.T2),
-            (item.get("albumName") or "—", theme.T2),
+            (item.get("albumName") or "-", theme.T2),
             (f"{duration // 60}:{duration % 60:02d}", theme.T3),
             (lyric + ("  ✓" if saved else ""), color),
         ]
@@ -279,8 +279,8 @@ class LibraryView(QWidget):
         self._fill_table([self._local_cells(song) for song in songs])
         if not songs:
             self._show_status(
-                "Library masih kosong." if len(self.library) == 0
-                else "Tidak ada yang cocok di library lokal."
+                "The library is still empty." if len(self.library) == 0
+                else "Nothing matches in the local library."
             )
         else:
             self.status.hide()
@@ -289,10 +289,10 @@ class LibraryView(QWidget):
         duration = int(song.duration_sec)
         return [
             (song.title, theme.T1),
-            (song.artist or "—", theme.T2),
-            (song.album or "—", theme.T2),
+            (song.artist or "-", theme.T2),
+            (song.album or "-", theme.T2),
             (f"{duration // 60}:{duration % 60:02d}", theme.T3),
-            (f"{len(song.lines)} baris", theme.OK if song.lines else theme.T4),
+            (f"{len(song.lines)} lines", theme.OK if song.lines else theme.T4),
         ]
 
     def refresh_local_count(self, notify=True):
@@ -350,13 +350,13 @@ class LibraryView(QWidget):
     def load_selected(self):
         item = self.current_item()
         if item is None:
-            self._show_status("Pilih salah satu baris dulu.")
+            self._show_status("Select a row first.")
             return
         song = self._as_song(item)
         if not song.lines:
             self._show_status(
-                "Lagu ini belum punya lirik bersinkron waktu. "
-                "Pakai “Edit lirik” untuk menandai waktunya sendiri."
+                "This song has no time-synced lyrics yet. "
+                "Use “Edit lyrics” to time it yourself."
             )
             return
         self.status.hide()
@@ -374,11 +374,11 @@ class LibraryView(QWidget):
         existing = self.library.find_by_lrclib_id(incoming.lrclib_id)
         if existing is not None and existing.lines != incoming.lines:
             answer = QMessageBox.question(
-                self, "Sudah ada di library",
-                f"“{existing.label}” sudah ada di library dengan {len(existing.lines)} baris.\n\n"
-                f"Menyimpan lagi akan menggantinya dengan versi LRCLIB "
-                f"({len(incoming.lines)} baris). Koreksi timestamp yang pernah kamu buat "
-                f"akan hilang.\n\nTimpa?",
+                self, "Already in the library",
+                f"“{existing.label}” is already in the library with {len(existing.lines)} lines.\n\n"
+                f"Saving again replaces it with the LRCLIB version "
+                f"({len(incoming.lines)} lines). Any timestamp corrections you made "
+                f"will be lost.\n\nOverwrite?",
                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
             )
             if answer != QMessageBox.Yes:
@@ -388,7 +388,7 @@ class LibraryView(QWidget):
         self.refresh_local_count()
         if self._source == SOURCE_ONLINE:
             self._on_results(self._rows)   # gambar ulang supaya tanda ✓ muncul
-        self._show_status(f"“{song.title}” tersimpan ke library.")
+        self._show_status(f"“{song.title}” saved to the library.")
 
     def add_to_show(self):
         """
@@ -401,7 +401,7 @@ class LibraryView(QWidget):
         """
         item = self.current_item()
         if item is None:
-            self._show_status("Pilih salah satu baris dulu.")
+            self._show_status("Select a row first.")
             return
         song = self._as_song(item)
         if not isinstance(item, Song):
@@ -423,8 +423,8 @@ class LibraryView(QWidget):
         if not isinstance(song, Song):
             return
         answer = QMessageBox.question(
-            self, "Hapus dari library",
-            f"Hapus “{song.label}” dari library?\n\nTindakan ini tidak bisa dibatalkan.",
+            self, "Delete from library",
+            f"Delete “{song.label}” from the library?\n\nThis cannot be undone.",
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if answer != QMessageBox.Yes:
@@ -443,13 +443,13 @@ class LibraryView(QWidget):
     def _on_song_saved(self, song):
         self.refresh_local_count()
         self.local_radio.setChecked(True)
-        self._show_status(f"“{song.title}” tersimpan — {len(song.lines)} baris bertanda waktu.")
+        self._show_status(f"“{song.title}” saved with {len(song.lines)} timed lines.")
 
     # ---------- impor .lrc (REQ-F-LIB-03/07) ----------
 
     def import_lrc(self):
         paths, _ = QFileDialog.getOpenFileNames(
-            self, "Impor file .lrc", "", "File LRC (*.lrc *.txt);;Semua file (*)"
+            self, "Import .lrc files", "", "LRC files (*.lrc *.txt);;All files (*)"
         )
         if not paths:
             return
@@ -463,7 +463,7 @@ class LibraryView(QWidget):
                 skipped.append(f"{os.path.basename(path)} ({exc})")
                 continue
             if not lines:
-                skipped.append(f"{os.path.basename(path)} (tidak ada baris bertimestamp)")
+                skipped.append(f"{os.path.basename(path)} (no timestamped lines)")
                 continue
 
             title = os.path.splitext(os.path.basename(path))[0]
@@ -471,7 +471,7 @@ class LibraryView(QWidget):
             if " - " in title:      # konvensi umum nama file: "Artis - Judul.lrc"
                 artist, _, title = title.partition(" - ")
             self.library.upsert(Song(
-                title=title.strip() or "(tanpa judul)",
+                title=title.strip() or "(untitled)",
                 artist=artist.strip(),
                 duration_sec=lines[-1][0] + 5,
                 source="lrc-import",
@@ -481,9 +481,9 @@ class LibraryView(QWidget):
 
         self.refresh_local_count()
         self.local_radio.setChecked(True)
-        message = f"{imported} file diimpor ke library."
+        message = f"{imported} file(s) imported into the library."
         if skipped:
-            message += f" {len(skipped)} dilewati: " + "; ".join(skipped[:3])
+            message += f" {len(skipped)} skipped: " + "; ".join(skipped[:3])
             if len(skipped) > 3:
-                message += f" (+{len(skipped) - 3} lagi)"
+                message += f" (+{len(skipped) - 3} more)"
         self._show_status(message)

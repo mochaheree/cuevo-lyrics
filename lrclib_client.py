@@ -41,11 +41,11 @@ def search(query="", track_name="", artist_name="", album_name="", timeout=10):
         params["album_name"] = album_name
 
     if not params:
-        raise ValueError("Butuh minimal 'query' atau 'track_name' untuk mencari.")
+        raise ValueError("Need at least 'query' or 'track_name' to search.")
 
     resp = requests.get(f"{BASE_URL}/search", params=params, headers=_headers(), timeout=timeout)
     if resp.status_code != 200:
-        raise LrcLibError(f"Pencarian gagal (HTTP {resp.status_code}): {resp.text[:200]}")
+        raise LrcLibError(f"Search failed (HTTP {resp.status_code}): {resp.text[:200]}")
     return resp.json()
 
 
@@ -53,9 +53,9 @@ def get_by_id(lrclib_id, timeout=10):
     """Ambil satu entri lirik lengkap berdasarkan ID hasil search()."""
     resp = requests.get(f"{BASE_URL}/get/{lrclib_id}", headers=_headers(), timeout=timeout)
     if resp.status_code == 404:
-        raise LrcLibError("Lirik dengan ID tersebut tidak ditemukan.")
+        raise LrcLibError("No lyrics found for that ID.")
     if resp.status_code != 200:
-        raise LrcLibError(f"Gagal mengambil lirik (HTTP {resp.status_code}): {resp.text[:200]}")
+        raise LrcLibError(f"Could not fetch lyrics (HTTP {resp.status_code}): {resp.text[:200]}")
     return resp.json()
 
 
@@ -75,7 +75,7 @@ def get_exact(track_name, artist_name, album_name="", duration=None, timeout=10)
 
     resp = requests.get(f"{BASE_URL}/get", params=params, headers=_headers(), timeout=timeout)
     if resp.status_code == 404:
-        raise LrcLibError("Tidak ada lirik exact-match untuk parameter ini.")
+        raise LrcLibError("No exact-match lyrics for these parameters.")
     if resp.status_code != 200:
-        raise LrcLibError(f"Gagal mengambil lirik (HTTP {resp.status_code}): {resp.text[:200]}")
+        raise LrcLibError(f"Could not fetch lyrics (HTTP {resp.status_code}): {resp.text[:200]}")
     return resp.json()

@@ -41,7 +41,7 @@ class OperatorView(QWidget):
         self.show_session = show_session
         self._spout_thread = None
 
-        self.setWindowTitle("CUEVO Lyrics — Operator Display")
+        self.setWindowTitle("CUEVO Lyrics - Operator Display")
         self.setWindowFlag(Qt.Window)
         self.resize(900, 560)
         self.setStyleSheet(theme.stylesheet())
@@ -82,17 +82,17 @@ class OperatorView(QWidget):
 
         self.screen_combo = QComboBox()
         self.screen_combo.setFixedWidth(190)
-        self.screen_combo.setToolTip("Pindahkan window ini ke monitor lain")
+        self.screen_combo.setToolTip("Move this window to another monitor")
         self._fill_screens()
         self.screen_combo.activated.connect(self._move_to_screen)
 
-        self.preview_btn = QPushButton("Sembunyikan preview")
+        self.preview_btn = QPushButton("Hide preview")
         self.preview_btn.setProperty("variant", "quiet")
         self.preview_btn.clicked.connect(self._toggle_preview)
 
         self.fullscreen_btn = QPushButton("Full screen")
         self.fullscreen_btn.setProperty("variant", "quiet")
-        self.fullscreen_btn.setToolTip("Esc untuk keluar")
+        self.fullscreen_btn.setToolTip("Press Esc to exit")
         self.fullscreen_btn.clicked.connect(self._toggle_fullscreen)
 
         wrap = QWidget()
@@ -133,7 +133,7 @@ class OperatorView(QWidget):
         theme.paint(now_key,
                     f"color:{theme.T3};font-family:{theme.MONO};font-size:11px;"
                     f"letter-spacing:2px;background:transparent;")
-        self.now_label = QLabel("—")
+        self.now_label = QLabel("-")
         self.now_label.setWordWrap(True)
         theme.paint(self.now_label,
                     "color:#ffffff;font-size:40px;font-weight:800;"
@@ -143,7 +143,7 @@ class OperatorView(QWidget):
         theme.paint(next_key,
                     f"color:{theme.T3};font-family:{theme.MONO};font-size:11px;"
                     f"letter-spacing:2px;background:transparent;")
-        self.next_label = QLabel("—")
+        self.next_label = QLabel("-")
         self.next_label.setWordWrap(True)
         theme.paint(self.next_label,
                     f"color:{theme.STANDBY};font-size:23px;font-weight:600;"
@@ -174,7 +174,7 @@ class OperatorView(QWidget):
         box.setContentsMargins(16, 10, 16, 10)
         box.setSpacing(24)
 
-        self.song_label = QLabel("—")
+        self.song_label = QLabel("-")
         self.time_label = QLabel("00:00 / 00:00")
         self.mode_label = QLabel("AUTO")
         self.offset_label = QLabel("OFFSET +0.00")
@@ -196,9 +196,9 @@ class OperatorView(QWidget):
         self.screen_combo.clear()
         for index, screen in enumerate(QGuiApplication.screens()):
             size = screen.geometry()
-            primary = " (utama)" if screen == QGuiApplication.primaryScreen() else ""
+            primary = " (primary)" if screen == QGuiApplication.primaryScreen() else ""
             self.screen_combo.addItem(
-                f"Monitor {index + 1} — {size.width()}×{size.height()}{primary}", index)
+                f"Monitor {index + 1}: {size.width()}×{size.height()}{primary}", index)
 
     def _move_to_screen(self, combo_index):
         screens = QGuiApplication.screens()
@@ -230,7 +230,7 @@ class OperatorView(QWidget):
     def _toggle_preview(self):
         visible = not self.preview.isVisible()
         self.preview.setVisible(visible)
-        self.preview_btn.setText("Sembunyikan preview" if visible else "Tampilkan preview")
+        self.preview_btn.setText("Hide preview" if visible else "Show preview")
 
     # ---------- data ----------
 
@@ -242,14 +242,14 @@ class OperatorView(QWidget):
         index = self.player_state.get_active_index(self.player_state.get_current_time())
 
         self.now_label.setText(
-            lines[index][1] if 0 <= index < len(lines) and lines[index][1] else "—")
+            lines[index][1] if 0 <= index < len(lines) and lines[index][1] else "-")
         self.next_label.setText(
-            lines[index + 1][1] if 0 <= index + 1 < len(lines) and lines[index + 1][1] else "—")
+            lines[index + 1][1] if 0 <= index + 1 < len(lines) and lines[index + 1][1] else "-")
 
         song = self.show_session.current()
         position = self.show_session.position_label()
         self.song_label.setText(
-            f"{position} · {song.title.upper()}" if song else "TIDAK DALAM SHOW")
+            f"{position} · {song.title.upper()}" if song else "NOT IN A SHOW")
 
         self.time_label.setText(
             f"{_format_clock(self.player_state.get_raw_position())} / "

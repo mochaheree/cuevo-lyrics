@@ -30,7 +30,7 @@ def _now_iso() -> str:
 
 @dataclass
 class Template:
-    name: str = "Template baru"
+    name: str = "New template"
     style: RenderStyle = field(default_factory=lambda: DEFAULT_STYLE)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     builtin: bool = False
@@ -50,32 +50,32 @@ class Template:
         style_data = data.get("style") or {}
         return cls(
             id=data.get("id") or str(uuid.uuid4()),
-            name=data.get("name") or "Template tanpa nama",
+            name=data.get("name") or "Untitled template",
             style=RenderStyle.from_dict(style_data),
             updated_at=data.get("updated_at") or _now_iso(),
         )
 
 
 def _presets():
-    """Preset bawaan (REQ-F-STYLE-03) — titik awal, bukan kurungan."""
+    """Preset bawaan (REQ-F-STYLE-03), titik awal, bukan kurungan."""
     base = DEFAULT_STYLE
     return [
-        Template(id="preset-white-outline", name="Putih Outline Tebal", builtin=True,
+        Template(id="preset-white-outline", name="Bold White Outline", builtin=True,
                  style=replace(base, active_font_size=64, outline_width=4,
                                text_color=(255, 255, 255, 255),
                                outline_color=(0, 0, 0, 255))),
-        Template(id="preset-minimal", name="Minimal Tanpa Outline", builtin=True,
+        Template(id="preset-minimal", name="Minimal No Outline", builtin=True,
                  style=replace(base, active_font_size=58, outline_width=0,
                                size_falloff=0.18, opacity_falloff=0.40)),
-        Template(id="preset-lower-third", name="Lower Third Satu Baris", builtin=True,
+        Template(id="preset-lower-third", name="Lower Third Single Line", builtin=True,
                  style=replace(base, layout="single_line", active_font_size=54,
                                outline_width=3, vertical_anchor_ratio=0.80,
                                context_before=0, context_after=0)),
-        Template(id="preset-karaoke", name="Karaoke Padat", builtin=True,
+        Template(id="preset-karaoke", name="Dense Karaoke", builtin=True,
                  style=replace(base, active_font_size=52, line_spacing_ratio=1.30,
                                context_before=3, context_after=3,
                                size_falloff=0.14, opacity_falloff=0.24)),
-        Template(id="preset-amber", name="Amber Panggung", builtin=True,
+        Template(id="preset-amber", name="Stage Amber", builtin=True,
                  style=replace(base, active_font_size=66, outline_width=4,
                                text_color=(255, 214, 140, 255),
                                outline_color=(20, 8, 0, 255))),
@@ -121,7 +121,7 @@ class TemplateStore:
         if template.builtin:
             # preset tidak bisa ditimpa -- simpan sebagai salinan milik user
             template = replace(template, id=str(uuid.uuid4()), builtin=False,
-                               name=f"{template.name} (salinan)")
+                               name=f"{template.name} (copy)")
         template = replace(template, updated_at=_now_iso())
         self._user[template.id] = template
         self.save()
