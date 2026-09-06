@@ -414,8 +414,18 @@ class LyricEditor(QDialog):
         artist = self.artist_input.text().strip()
         if self.song:
             from dataclasses import replace
+            # Penanda bagian (Verse/Chorus/dst, REQ-F-PLAY-08) disimpan per
+            # index baris. replace() akan menyalin sections lama apa adanya
+            # kalau tidak dijaga di sini, dan kalau editor ini baru saja
+            # mengubah JUMLAH baris (baris dipecah ulang, bukan cuma
+            # digeser waktunya), index lama sudah menunjuk baris yang salah.
+            # Label yang salah tempat lebih berbahaya daripada label yang
+            # hilang, jadi dibuang kalau jumlah barisnya berubah.
+            sections = (self.song.sections
+                       if len(lines) == len(self.song.lines) else [])
             return replace(self.song, title=title, artist=artist,
-                           duration_sec=duration, lines=lines)
+                           duration_sec=duration, lines=lines,
+                           sections=sections)
         return Song(title=title, artist=artist, duration_sec=duration,
                     lines=lines, source="manual")
 

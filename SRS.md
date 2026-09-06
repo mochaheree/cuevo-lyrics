@@ -10,13 +10,22 @@
 
 | | |
 |---|---|
-| **Versi dokumen** | 0.11 |
+| **Versi dokumen** | 0.11.1 |
 | **Status** | Living document, diperbarui seiring development di Claude Code |
 | **Tanggal dibuat** | 2026-08-31 |
-| **Terakhir direvisi** | 2026-09-04 (v0.11) |
+| **Terakhir direvisi** | 2026-09-07 (v0.11.1) |
 | **Pemilik produk** | (kamu) |
 | **Baseline kode saat ini** | Python, **PySide6/Qt**, LRCLIB, SpoutGL |
 | **Mockup UI** | `MOCKUP.md` (wireframe teks) |
+
+**Perubahan v0.11.1 (ringkas):**
+- **Penanda bagian lagu di tab Live (REQ-F-PLAY-08).** Klik kanan baris
+  lirik untuk menandainya Intro/Verse/Chorus/Bridge/dst, atau label bebas.
+  Disimpan per lagu di library, ikut kalau lagu dipakai lagi (§3.18).
+- Insiden saat verifikasi: skrip uji sempat menulis ke `library.json`
+  pengguna sungguhan karena `settings.json` yang disalin membawa path
+  absolut ke luar folder sementara. Ketahuan sendiri, langsung diperbaiki
+  di data pengguna maupun di skrip ujinya (§3.18).
 
 **Perubahan v0.11 (ringkas):**
 - **Tab Donate baru (REQ-F-DON-01/02).** Saweria, QRIS, dan tautan kontak.
@@ -1277,6 +1286,77 @@ Diverifikasi: setiap ukuran yang diminta (16/32/48/256) dijawab piksel
 persis segitu, artinya benar-benar diambil dari .ico dan bukan hasil Qt
 memperbesar satu-satunya ukuran yang ada.
 
+### 3.18 Penanda bagian lagu: Verse/Chorus/Bridge (v0.11.1)
+
+Permintaannya: bisa menandai Verse/Reff/Bridge di lirik tab Live.
+REQ-F-PLAY-08.
+
+**Desain: penanda per baris (chapter marker), bukan tag berkelanjutan.**
+Klik kanan sebuah baris di tab Live memberinya label ("bagian ini mulai di
+sini"), bukan menandai rentang baris. Ini yang dibutuhkan untuk scan cepat
+saat live, dan jauh lebih sederhana daripada melacak "baris mana saja yang
+termasuk chorus ini".
+
+**Kenapa disimpan sebagai index baris, bukan timestamp.** `Song.sections`
+berisi `[(line_index, label), ...]`. Kalau dikaitkan ke waktu, `shifted()`
+(REQ-F-LIB-05, geser semua timestamp) harus ikut menggeser tiap penanda dan
+gampang meleset. Dikaitkan ke index, `shifted()` otomatis tetap benar tanpa
+disentuh sama sekali, karena jumlah dan urutan baris tidak berubah, cuma
+waktunya.
+
+**Kenapa tetap satu baris = satu item, bukan baris tambahan untuk label.**
+`self.lyrics` (daftar lirik di tab Live) memakai `setUniformItemSizes(True)`
+untuk performa di lagu berbaris ratusan (lihat §3.2 soal ongkos render).
+Percobaan pertama menaruh label di baris terpisah sebelum barisnya sendiri,
+dan itu berarti sebagian item dua baris tinggi, sebagian satu, sementara
+uniform-size memaksa semuanya ke tinggi yang sama, hasilnya baris terpotong
+atau ruang terbuang di semua baris lain. Diperbaiki jadi tag di depan teks
+baris yang sama (`[CHORUS]  00:59.84  ...`) plus warna aksen
+(`theme.STANDBY`), satu item tetap satu baris.
+
+**Kenapa disimpan lewat `Song.sections`, bukan transient di tab Live saja.**
+Operator biasanya menandai struktur lagu sekali saat latihan, lalu memakai
+lagu yang sama di banyak show. Simpan sekali, konsisten di REQ-F-PLAY-08.
+Tapi hasil pencarian LRCLIB yang belum disimpan ke library mendapat `id`
+baru setiap kali dimuat (lihat `LibraryView._as_song`), jadi menandainya
+lalu memanggil `library.upsert()` akan membuat entri duplikat, bukan
+memperbarui yang dimaksud. Ditambal dengan pemeriksaan
+`library.get(song.id) is not None` sebelum upsert; kalau lagunya belum
+tersimpan, penanda tetap berlaku untuk sesi ini saja dan pesan status
+bilang persis kenapa.
+
+**Kenapa penanda dibuang kalau jumlah baris berubah saat re-edit.** Editor
+lirik manual bisa memecah ulang teks jadi baris berbeda jumlahnya. Index
+lama yang dipertahankan begitu saja lewat `dataclasses.replace()` akan
+menunjuk baris yang salah setelah itu -- label yang salah tempat lebih
+berbahaya daripada label yang hilang, jadi `_build_song()` di
+`lyric_editor.py` membuang `sections` kalau `len(lines)` berubah, dan
+mempertahankannya kalau cuma timestamp yang diperbaiki.
+
+**Insiden saat verifikasi: skrip uji sempat menulis ke data pengguna
+sungguhan.** Skrip verifikasi menyalin `settings.json` asli ke folder
+`%APPDATA%` sementara supaya pengaturan lain (font cache) ikut terbawa.
+`settings.json` ternyata menyimpan `library_path` sebagai **path absolut**
+dari sesi nyata sebelumnya, dan path absolut itu tetap menunjuk ke file
+asli walau `os.environ["APPDATA"]` sudah dialihkan ke folder sementara.
+Akibatnya `library.upsert()` menulis penanda uji ("Guitar solo") ke
+`library.json` pengguna yang sesungguhnya. Ketahuan dari hasil pengujian
+sendiri (bukan laporan pengguna), langsung diperbaiki di file aslinya
+(field `sections` yang nyasar dihapus), dan skrip ujinya diperbaiki supaya
+tidak lagi menyalin `settings.json`, plus ditambah assertion yang
+menghentikan pengujian seketika kalau `library_path` pernah menunjuk ke
+luar folder sementara. Satu efek samping tidak bisa dipulihkan sepenuhnya:
+`updated_at` lagu itu ikut ter-bump ke waktu pengujian, yang mengubah
+urutannya di daftar "terakhir dipakai" pada Library lokal. Kosmetik, tidak
+menghapus atau merusak data lain, tapi tetap harus dicatat karena pengguna
+tidak pernah menyetujui perubahan pada datanya sendiri.
+
+Pola akarnya sama dengan §3.8: **path absolut yang disalin mentah-mentah
+ikut membawa konteks lama yang tidak lagi valid.** Pelajarannya untuk
+verifikasi berikutnya: environment terisolasi harus diperiksa validitasnya
+lewat assertion di awal skrip, bukan diasumsikan benar karena env var sudah
+diubah.
+
 ---
 
 ## 4. Requirement Fungsional
@@ -1318,6 +1398,7 @@ Format ID: `REQ-F-<area>-<nomor>`. Prioritas MoSCoW: **M**ust,
 | REQ-F-PLAY-05 | Sistem **harus** punya mode navigasi manual **per-baris** (tombol Next Line / Previous Line) sebagai alternatif dari mode auto-timestamp, untuk kasus lagu tanpa tempo tetap (acapella, rubato, dsb.), ini mirip mekanisme "klik untuk lanjut slide" ala ProPresenter. | M *(selesai, di mode manual jam diabaikan, Play/seek dinonaktifkan supaya tidak menyesatkan)* |
 | REQ-F-PLAY-06 | Sistem **sebaiknya** mendukung keyboard shortcut global (spasi = play/pause, panah = next/prev line, `B` = blank) minimal saat window aplikasi fokus. | S |
 | REQ-F-PLAY-07 | Sistem **boleh** mendukung shortcut global system-wide (aktif walau window lain sedang fokus), berguna kalau operator kerja dari layar berbeda. | C *(selesai, Win32 RegisterHotKey tanpa dependency baru; Ctrl+Alt+… dan alasannya di §3.9)* |
+| REQ-F-PLAY-08 | Sistem **boleh** menandai baris lirik dengan bagian lagu (Verse/Chorus/Bridge/dst) supaya operator gampang mengenali struktur lagu saat scroll cepat di tab Live. | C *(selesai, §3.18)* |
 
 ### 4.4 Rendering & Output (`OUT`)
 

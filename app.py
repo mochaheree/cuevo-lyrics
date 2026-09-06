@@ -87,6 +87,7 @@ class MainWindow(QMainWindow):
         self.style_config = self._initial_style()
         self.spout_thread = None
         self._song_title = ""
+        self._current_song = None    # Song aktif di Live, untuk simpan penanda bagian
         self.operator_window = None          # REQ-F-OPS-01, window kedua
         self.cast_window = None              # REQ-F-OUT-09, jendela siar
         self.global_hotkeys = GlobalHotkeys()  # REQ-F-PLAY-07
@@ -232,6 +233,7 @@ class MainWindow(QMainWindow):
         self.live_view = LiveView(self.player_state, self.style_config)
         self.live_view.songSelected.connect(self._goto_show_song)
         self.live_view.songStepRequested.connect(self._step_show_song)
+        self.live_view.sectionMarked.connect(self._on_section_mark_changed)
 
         self.library_view = LibraryView(self.library)
         self.library_view.songLoaded.connect(self._on_song_loaded)
@@ -285,15 +287,38 @@ class MainWindow(QMainWindow):
 
     # ---------- aksi ----------
 
-    def _on_song_loaded(self, title, lines, duration):
+    def _on_song_loaded(self, song):
         """Lagu dimuat langsung dari tab Library, di luar set list."""
-        self._activate_lyrics(title, lines, duration)
+        self._activate_lyrics(song.label, song.lines, song.duration_sec, song=song)
         self.tabs.setCurrentWidget(self.live_view)
 
-    def _activate_lyrics(self, title, lines, duration):
+    def _activate_lyrics(self, title, lines, duration, song=None):
         self.player_state.load_lyrics(lines, duration=duration)
-        self.live_view.load_song(title, lines)
+        self.live_view.load_song(title, lines, song=song)
         self._song_title = title
+        self._current_song = song
+
+    def _on_section_mark_changed(self, index, label):
+        """
+        Klik kanan di tab Live menandai bagian lagu (Verse/Chorus/Bridge/...),
+        REQ-F-PLAY-08. Ditulis balik ke library HANYA kalau lagunya memang
+        sudah tersimpan di sana (punya id yang dikenal); hasil pencarian
+        LRCLIB yang belum disimpan dapat id baru tiap kali dimuat, jadi
+        menyimpannya akan membuat entri duplikat, bukan memperbarui yang
+        dimaksud. Tandanya tetap berlaku untuk sesi ini, cuma tidak ikut
+        tersimpan sampai lagunya disimpan lebih dulu.
+        """
+        song = self._current_song
+        if song is None:
+            return
+        song.set_section(index, label)
+        if self.library.get(song.id) is not None:
+            self.library.upsert(song)
+        else:
+            self.library_view._show_status(
+                "Section mark kept for this session only. "
+                "Save this song to the library to keep it."
+            )
 
     # ---------- navigasi Show (REQ-F-SET-03) ----------
 
@@ -327,7 +352,7 @@ class MainWindow(QMainWindow):
             return
         # Pindah lagu tidak boleh menyalakan output diam-diam: kalau operator
         # sedang BLANK, tetap BLANK sampai dia sendiri melepasnya.
-        self._activate_lyrics(song.label, song.lines, song.duration_sec)
+        self._activate_lyrics(song.label, song.lines, song.duration_sec, song=song)
         self._refresh_show()
         self.tabs.setCurrentWidget(self.live_view)
 

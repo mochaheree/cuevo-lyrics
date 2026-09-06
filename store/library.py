@@ -30,6 +30,11 @@ class Song:
     source: str = "manual"            # "lrclib" | "manual" | "lrc-import"
     lrclib_id: int = None
     lines: list = field(default_factory=list)   # [(time_sec, text), ...]
+    # Penanda bagian lagu (Verse/Chorus/Bridge/...), REQ-F-PLAY-08. Diberi
+    # nama section BUKAN section_marks supaya cocok dengan "sections" di
+    # JSON. Kunci-nya index baris di `lines`, bukan time_sec, supaya tetap
+    # sah setelah shifted() menggeser semua timestamp.
+    sections: list = field(default_factory=list)  # [(line_index, label), ...]
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: str = field(default_factory=_now_iso)
     updated_at: str = field(default_factory=_now_iso)
@@ -48,6 +53,8 @@ class Song:
             "source": self.source,
             "lrclib_id": self.lrclib_id,
             "lines": [{"time_sec": round(t, 3), "text": text} for t, text in self.lines],
+            "sections": [{"line": i, "label": label}
+                         for i, label in sorted(self.sections)],
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
@@ -61,6 +68,18 @@ class Song:
             except (KeyError, TypeError, ValueError):
                 continue          # baris rusak dilewati, sisanya tetap terpakai
         lines.sort(key=lambda pair: pair[0])
+
+        sections = []
+        for item in data.get("sections") or []:
+            try:
+                idx = int(item["line"])
+                label = str(item["label"]).strip()
+            except (KeyError, TypeError, ValueError):
+                continue          # penanda rusak dilewati, bukan gagal muat semuanya
+            if label and 0 <= idx < len(lines):
+                sections.append((idx, label))
+        sections.sort()
+
         return cls(
             id=data.get("id") or str(uuid.uuid4()),
             title=data.get("title") or "(untitled)",
@@ -70,9 +89,22 @@ class Song:
             source=data.get("source") or "manual",
             lrclib_id=data.get("lrclib_id"),
             lines=lines,
+            sections=sections,
             created_at=data.get("created_at") or _now_iso(),
             updated_at=data.get("updated_at") or _now_iso(),
         )
+
+    def set_section(self, index: int, label) -> None:
+        """
+        Tambah, ganti, atau hapus (label kosong/None) penanda bagian pada
+        satu baris. Dipakai dari klik kanan di tab Live, bukan cuma saat
+        lagu dibuat, jadi ini method biasa, bukan bagian dari from_dict.
+        """
+        self.sections = [pair for pair in self.sections if pair[0] != index]
+        if label:
+            self.sections.append((index, str(label)))
+            self.sections.sort()
+        self.updated_at = _now_iso()
 
     def shifted(self, delta_sec: float) -> "Song":
         """

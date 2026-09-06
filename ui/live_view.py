@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QListWidget,
-    QListWidgetItem, QSlider, QFrame, QSizePolicy,
+    QListWidgetItem, QSlider, QFrame, QSizePolicy, QMenu, QInputDialog,
 )
 
 from ui import theme
@@ -84,6 +84,12 @@ class LiveView(QWidget):
     blankToggled = Signal(bool)
     songSelected = Signal(int)        # pindah ke lagu ke-N di set list
     songStepRequested = Signal(int)   # +1 / -1 lagu (REQ-F-SET-03)
+    sectionMarked = Signal(int, object)  # index baris, label (atau None = hapus)
+
+    # Preset di menu klik kanan. Bebas ada label lain lewat "Custom label...",
+    # ini cuma yang paling sering dipakai supaya tidak perlu mengetik tiap kali.
+    SECTION_PRESETS = ["Intro", "Verse", "Pre-Chorus", "Chorus", "Bridge",
+                       "Outro", "Interlude"]
 
     def __init__(self, player_state, style, parent=None):
         super().__init__(parent)
@@ -91,6 +97,7 @@ class LiveView(QWidget):
         self._dragging_seek = False
         self._suppress_lyric_signal = False
         self._active_row = -1
+        self._sections = {}     # index baris -> label, untuk lagu yang sedang dimuat
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -174,10 +181,75 @@ class LiveView(QWidget):
         self.lyrics = QListWidget()
         self.lyrics.setUniformItemSizes(True)
         self.lyrics.itemClicked.connect(self._on_lyric_clicked)  # klik = lompat
+        self.lyrics.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.lyrics.customContextMenuRequested.connect(self._show_section_menu)
         col.add(self.lyrics, 1)
-        col.add_footer(text="Click any line to jump there. Auto-scroll follows the active line.")
+        col.add_footer(text="Click any line to jump there. Right-click to mark a section.")
         self.lyrics_col = col
         return col
+
+    def _show_section_menu(self, pos):
+        """
+        Klik kanan sebuah baris untuk menandainya Verse/Chorus/Bridge/dst,
+        REQ-F-PLAY-08. Ditandai per baris (bukan rentang), sama seperti
+        chapter marker: tandanya berlaku sebagai "bagian X mulai di sini".
+        """
+        item = self.lyrics.itemAt(pos)
+        if item is None:
+            return
+        index = self.lyrics.row(item)
+        current = self._sections.get(index)
+
+        menu = QMenu(self)
+        for label in self.SECTION_PRESETS:
+            action = menu.addAction(label)
+            action.setCheckable(True)
+            action.setChecked(current == label)
+        menu.addSeparator()
+        custom_action = menu.addAction("Custom label...")
+        clear_action = menu.addAction("Clear mark") if current else None
+
+        chosen = menu.exec(self.lyrics.viewport().mapToGlobal(pos))
+        if chosen is None:
+            return
+        if clear_action is not None and chosen is clear_action:
+            self._set_section(index, None)
+        elif chosen is custom_action:
+            text, ok = QInputDialog.getText(
+                self, "Custom section label", "Label:", text=current or "")
+            if ok and text.strip():
+                self._set_section(index, text.strip())
+        else:
+            self._set_section(index, chosen.text())
+
+    def _set_section(self, index, label):
+        if label:
+            self._sections[index] = label
+        else:
+            self._sections.pop(index, None)
+        lines = self.player_state.get_lines()
+        if 0 <= index < len(lines):
+            item = self.lyrics.item(index)
+            if item is not None:
+                self._style_lyric_item(item, index, *lines[index])
+        self.sectionMarked.emit(index, label)
+
+    def _style_lyric_item(self, item, index, time_sec, text):
+        """
+        Satu baris = satu item, selalu, tidak ada baris tambahan untuk
+        penanda. `self.lyrics` pakai setUniformItemSizes(True) untuk
+        performa di lagu berbaris ratusan (§3.2); item dua baris akan
+        dipaksa ke tinggi seragam yang sama dan malah terpotong atau
+        membuang ruang di semua baris lain. Penanda jadi label di depan
+        baris yang sama, plus warna aksen, bukan baris terpisah.
+        """
+        label = self._sections.get(index)
+        if label:
+            item.setText(f"[{label.upper()}]  {format_time(time_sec)}   {text}")
+            item.setForeground(QColor(theme.STANDBY))
+        else:
+            item.setText(f"{format_time(time_sec)}   {text}")
+            item.setForeground(QColor(theme.T2))
 
     def _on_lyric_clicked(self, item):
         if self._suppress_lyric_signal:
@@ -375,16 +447,20 @@ class LiveView(QWidget):
 
     # ---------- dipanggil dari luar ----------
 
-    def load_song(self, title, lines):
+    def load_song(self, title, lines, song=None):
         self.lyrics_col.title_label.setText(title)
         self.lyrics_col.right_label.setText(f"{len(lines)} lines")
         self._suppress_lyric_signal = True
         self.lyrics.clear()
-        for time_sec, text in lines:
-            item = QListWidgetItem(f"{format_time(time_sec)}   {text}")
+        # song=None saat dimuat dari tempat yang belum diteruskan (misalnya
+        # jalur lama), atau memang tidak ada Song untuk sumber ini. Penanda
+        # kosong dalam kasus itu, bukan error.
+        self._sections = dict(song.sections) if song is not None else {}
+        for index, (time_sec, text) in enumerate(lines):
+            item = QListWidgetItem()
             item.setData(Qt.UserRole, time_sec)
-            item.setSizeHint(item.sizeHint().boundedTo(item.sizeHint()))
             self.lyrics.addItem(item)
+            self._style_lyric_item(item, index, time_sec, text)
         self._suppress_lyric_signal = False
         self._active_row = -1
 

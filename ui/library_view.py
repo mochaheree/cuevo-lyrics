@@ -41,7 +41,9 @@ class _SearchBridge(QObject):
 
 
 class LibraryView(QWidget):
-    songLoaded = Signal(str, list, float)   # judul, lines, durasi
+    songLoaded = Signal(object)             # Song, bukan cuma judul/lines/durasi,
+                                             # karena Live perlu song.id untuk
+                                             # menyimpan penanda bagian lagu (REQ-F-PLAY-08)
     libraryChanged = Signal()               # isi library berubah -> Show perlu menyegarkan
     addToShowRequested = Signal(object)     # Song -> ditambahkan ke show yang dibuka
 
@@ -360,7 +362,7 @@ class LibraryView(QWidget):
             )
             return
         self.status.hide()
-        self.songLoaded.emit(song.label, song.lines, song.duration_sec)
+        self.songLoaded.emit(song)
 
     def save_selected(self):
         item = self.current_item()
