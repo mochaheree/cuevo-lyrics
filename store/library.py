@@ -106,6 +106,18 @@ class Song:
             self.sections.sort()
         self.updated_at = _now_iso()
 
+    def set_sections(self, marks) -> None:
+        """
+        Ganti seluruh penanda sekaligus (dipakai auto-mark, REQ-F-PLAY-09).
+
+        Sengaja satu operasi, bukan set_section() berkali-kali: tiap
+        perubahan penanda memicu satu penulisan library ke disk, dan
+        auto-mark bisa menghasilkan sepuluh penanda sekaligus.
+        """
+        self.sections = sorted((int(i), str(label))
+                               for i, label in dict(marks).items() if label)
+        self.updated_at = _now_iso()
+
     def shifted(self, delta_sec: float) -> "Song":
         """
         Semua timestamp digeser -- REQ-F-LIB-05, untuk kasus versi rekaman

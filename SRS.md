@@ -10,13 +10,23 @@
 
 | | |
 |---|---|
-| **Versi dokumen** | 0.11.1 |
+| **Versi dokumen** | 0.11.2 |
 | **Status** | Living document, diperbarui seiring development di Claude Code |
 | **Tanggal dibuat** | 2026-08-31 |
-| **Terakhir direvisi** | 2026-09-07 (v0.11.1) |
+| **Terakhir direvisi** | 2026-09-07 (v0.11.2) |
 | **Pemilik produk** | (kamu) |
 | **Baseline kode saat ini** | Python, **PySide6/Qt**, LRCLIB, SpoutGL |
 | **Mockup UI** | `MOCKUP.md` (wireframe teks) |
+
+**Perubahan v0.11.2 (ringkas):**
+- **Auto-mark bagian lagu (REQ-F-PLAY-09).** Tombol di tab Live menebak
+  Verse/Chorus/Bridge dari pengulangan baris. Bentuknya usulan: harus
+  ditekan, konfirmasi dulu kalau mau menimpa penanda buatan tangan, dan
+  tidak menandai apa pun kalau tidak ada pengulangan (§3.19).
+- Diukur di 11 lagu asli, bukan diklaim. Dua cacat ketemu dan diperbaiki
+  (penanda di baris kosong: 4 lagu; blok pendek jadi verse: 9 verse palsu
+  di satu lagu). Satu batas yang TIDAK diperbaiki dan alasannya ditulis:
+  chorus satu baris tidak akan pernah terdeteksi (§3.19).
 
 **Perubahan v0.11.1 (ringkas):**
 - **Penanda bagian lagu di tab Live (REQ-F-PLAY-08).** Klik kanan baris
@@ -1357,6 +1367,82 @@ verifikasi berikutnya: environment terisolasi harus diperiksa validitasnya
 lewat assertion di awal skrip, bukan diasumsikan benar karena env var sudah
 diubah.
 
+### 3.19 Penanda bagian otomatis, dan batasnya (v0.11.2)
+
+Lanjutan §3.18: bisa tidak penandanya diisi otomatis. Jawabannya bisa,
+sebagian, dan bagian "sebagian" itu yang harus jujur ditulis.
+
+**Sinyal yang dipakai cuma dua, dan dua-duanya memang ada di data lirik:**
+pengulangan baris (chorus itu blok yang berulang, definisi struktural, bisa
+dihitung persis) dan jeda waktu antar baris (jarak yang jauh di atas median
+lagu itu sendiri menandai pergantian bagian).
+
+**Yang sengaja TIDAK dipakai.** Analisis audio: aplikasi ini tidak pernah
+menyentuh audio sama sekali, menambahkannya cuma untuk ini berarti
+dependensi dan kompleksitas besar untuk fitur pelengkap. Model bahasa:
+butuh jaringan dan API key, membuat fitur yang tadinya offline jadi
+bergantung koneksi, dan hasilnya tetap tidak bisa dipertanggungjawabkan.
+
+Modulnya `section_detect.py`, bebas GUI dan bebas Spout (REQ-NF-06), jadi
+bisa diuji tanpa membuka window sama sekali.
+
+#### Diukur di 11 lagu asli di library, bukan diklaim
+
+Iterasi pertama langsung dijalankan ke seluruh library dan hasilnya
+dicetak per baris, bukan diasumsikan jalan. Dua cacat langsung kelihatan:
+
+| Cacat | Terukur | Perbaikan |
+|---|---|---|
+| Penanda mendarat di baris **kosong** (jeda instrumental di LRC) | 4 dari 11 lagu | Penanda digeser ke baris berteks pertama di blok itu |
+| Blok satu-dua baris terbaca sebagai verse | "Jireh" (137 baris) pecah 10 blok, jadi **9 "Verse"** yang tidak satu pun benar | `MIN_VERSE_LINES = 3` |
+
+Sesudah perbaikan: **0 penanda di baris kosong**, dan "Jireh" turun dari 9
+verse ke 6.
+
+#### Yang masih salah, dan kenapa tidak dikejar terus
+
+"Jireh" tetap salah secara substansi: yang ditandai Chorus ("If He dresses
+the lilies...") sebenarnya bridge-nya, sementara chorus aslinya ("Jireh,
+You are enough") **cuma satu baris yang diulang belasan kali**, di bawah
+`MIN_RUN = 2` jadi tidak akan pernah terdeteksi.
+
+Ambang itu tidak bisa diturunkan ke 1 tanpa merusak lagu lain: hampir
+setiap lagu punya satu baris isian ("oh-oh-oh", "yeah") yang berulang lebih
+sering daripada chorusnya. Menurunkannya berarti menukar satu lagu yang
+benar dengan sepuluh lagu yang salah.
+
+Ini batas nyata analisis pengulangan murni, bukan bug yang belum sempat
+diperbaiki. Hook satu baris yang diulang dua puluh kali memang ambigu
+secara struktural: bisa chorus, bisa outro chant. Tanpa audio atau
+pengetahuan lagu, tidak ada di data yang bisa membedakannya.
+
+Perkiraan kasar dari 11 lagu uji: chorus tertebak benar di sekitar 8 sampai
+9 lagu, salah di 1 ("Jireh"), dan 1 lagu ("Siti Nurbaya", 16 baris) sengaja
+tidak ditandai sama sekali karena tidak ada pengulangan yang cukup. ⚠️
+Medium confidence: penilaian benar/salahnya dari membaca hasilnya, bukan
+dari perbandingan dengan struktur resmi tiap lagu.
+
+#### Karena bisa salah, bentuknya usulan
+
+Tiga hal yang mengikuti langsung dari fakta bahwa detektornya bisa salah:
+
+1. **Tidak jalan sendiri.** Harus ditekan tombol "Auto-mark sections".
+   Tidak ada yang tertulis ke library tanpa operator memintanya.
+2. **Tidak menimpa kerja tangan diam-diam.** Kalau lagu sudah punya
+   penanda, muncul konfirmasi yang menyebut angkanya ("ganti 4 penanda
+   dengan 6 tebakan?").
+3. **Tidak menandai kalau tidak yakin.** Lagu tanpa pengulangan yang cukup
+   menghasilkan nol penanda plus pesan yang bilang kenapa, bukan penanda
+   asal supaya terlihat pintar.
+
+Perbaikannya satu klik kanan per baris (§3.18), jadi ongkos salah tebak
+rendah. Itu yang membuat fitur tebakan ini layak ada sama sekali.
+
+**Satu tulisan, bukan sepuluh.** `Song.set_sections()` mengganti seluruh
+penanda sekaligus. Kalau auto-mark memakai `set_section()` berkali-kali,
+sepuluh penanda berarti sepuluh kali `library.upsert()` dan sepuluh kali
+tulis file.
+
 ---
 
 ## 4. Requirement Fungsional
@@ -1399,6 +1485,7 @@ Format ID: `REQ-F-<area>-<nomor>`. Prioritas MoSCoW: **M**ust,
 | REQ-F-PLAY-06 | Sistem **sebaiknya** mendukung keyboard shortcut global (spasi = play/pause, panah = next/prev line, `B` = blank) minimal saat window aplikasi fokus. | S |
 | REQ-F-PLAY-07 | Sistem **boleh** mendukung shortcut global system-wide (aktif walau window lain sedang fokus), berguna kalau operator kerja dari layar berbeda. | C *(selesai, Win32 RegisterHotKey tanpa dependency baru; Ctrl+Alt+… dan alasannya di §3.9)* |
 | REQ-F-PLAY-08 | Sistem **boleh** menandai baris lirik dengan bagian lagu (Verse/Chorus/Bridge/dst) supaya operator gampang mengenali struktur lagu saat scroll cepat di tab Live. | C *(selesai, §3.18)* |
+| REQ-F-PLAY-09 | Sistem **boleh** menebak penanda bagian secara otomatis dari pengulangan baris, sebagai usulan yang bisa dibetulkan operator, bukan sebagai kebenaran. | C *(selesai, akurasi dan batasnya diukur di §3.19)* |
 
 ### 4.4 Rendering & Output (`OUT`)
 

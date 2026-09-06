@@ -102,6 +102,19 @@ switch that empties the output without losing your place in the song.
 Shortcuts: `Space` play/pause, `Left`/`Right` for previous and next line,
 `B` for blank.
 
+Right-click any lyric line to mark it as a section: Intro, Verse, Chorus,
+Bridge, and so on, or type your own label. Marked lines get a tag and an
+accent colour so you can find the chorus at a glance while scrolling during
+a show. Marks are saved with the song, so they are still there next week.
+
+**Auto-mark sections** guesses the structure for you from repeated lines. It
+is a suggestion, not an oracle: it finds the chorus correctly in most songs,
+but a song whose chorus is a single line repeated many times will be labelled
+wrong, because a one line repeat is indistinguishable from an outro chant
+without hearing the music. Fix anything it gets wrong with one right-click.
+It never runs on its own, and it asks before replacing marks you made by
+hand.
+
 **Library** searches LRCLIB through a single free-form box. Title, artist, or
 both, in any order. It also holds your saved songs, imports `.lrc` files,
 opens the manual lyric editor, and adds songs to the show you have open.
@@ -168,6 +181,7 @@ app.py                   QMainWindow: status strip and tabs
 # core, no GUI and no Spout, runs anywhere
 lrclib_client.py         HTTP calls to the LRCLIB API
 lrc_parser.py            parse and format LRC, find the active line
+section_detect.py        guess Verse/Chorus/Bridge from repeated lines
 player_state.py          play/pause/position/offset/blank, thread safe
 render_style.py          RenderStyle, every visual parameter, scalable
 scroll_anim.py           ScrollAnimator, scroll position state machine
@@ -247,7 +261,8 @@ and the Style panel warns you when a setting is about to cross it.
 
 - OSC and MIDI remote control are built but have not been tested against real
   hardware yet. See SRS section 3.13 for exactly what is unverified.
-- No audio analysis. Sync is manual by design.
+- No audio analysis. Sync is manual by design, and section auto-marking works
+  from repeated lyrics rather than from the audio.
 - Spout output is Windows only.
 
 ## Slides and tutorial

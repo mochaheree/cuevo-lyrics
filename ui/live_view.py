@@ -14,8 +14,10 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QListWidget,
     QListWidgetItem, QSlider, QFrame, QSizePolicy, QMenu, QInputDialog,
+    QMessageBox,
 )
 
+from section_detect import detect_sections
 from ui import theme
 from ui.preview import PreviewWidget
 from ui.segmented import SegmentedControl
@@ -85,6 +87,7 @@ class LiveView(QWidget):
     songSelected = Signal(int)        # pindah ke lagu ke-N di set list
     songStepRequested = Signal(int)   # +1 / -1 lagu (REQ-F-SET-03)
     sectionMarked = Signal(int, object)  # index baris, label (atau None = hapus)
+    sectionsReplaced = Signal(object)    # semua penanda sekaligus (auto-mark)
 
     # Preset di menu klik kanan. Bebas ada label lain lewat "Custom label...",
     # ini cuma yang paling sering dipakai supaya tidak perlu mengetik tiap kali.
@@ -184,9 +187,57 @@ class LiveView(QWidget):
         self.lyrics.setContextMenuPolicy(Qt.CustomContextMenu)
         self.lyrics.customContextMenuRequested.connect(self._show_section_menu)
         col.add(self.lyrics, 1)
-        col.add_footer(text="Click any line to jump there. Right-click to mark a section.")
+
+        self.automark_btn = QPushButton("Auto-mark sections")
+        self.automark_btn.setProperty("variant", "quiet")
+        self.automark_btn.setToolTip(
+            "Guess Verse/Chorus/Bridge from repeated lines.\n"
+            "It is a suggestion, not a certainty: fix anything it gets\n"
+            "wrong by right-clicking the line."
+        )
+        self.automark_btn.clicked.connect(self._auto_mark_sections)
+        col.add_footer(self.automark_btn,
+                       text="Right-click a line to mark a section.")
         self.lyrics_col = col
         return col
+
+    def _auto_mark_sections(self):
+        """
+        Isi penanda otomatis dari pengulangan baris (REQ-F-PLAY-09).
+
+        Hasilnya usulan. Detektornya bisa salah, dan pada lagu yang
+        chorus-nya cuma satu baris berulang memang salah (§3.19), jadi
+        penanda yang sudah dibuat tangan tidak boleh hilang diam-diam:
+        kalau sudah ada, operator dikonfirmasi dulu.
+        """
+        lines = self.player_state.get_lines()
+        if not lines:
+            return
+        marks = detect_sections(lines)
+        if not marks:
+            QMessageBox.information(
+                self, "Nothing to mark",
+                "No repeating section was found in this song, so there is "
+                "nothing worth guessing.\n\n"
+                "Right-click a line to mark it yourself."
+            )
+            return
+        if self._sections:
+            answer = QMessageBox.question(
+                self, "Replace existing marks?",
+                f"This song already has {len(self._sections)} mark(s).\n\n"
+                f"Replace them with {len(marks)} guessed one(s)?",
+                QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
+            )
+            if answer != QMessageBox.Yes:
+                return
+
+        self._sections = dict(marks)
+        for index, (time_sec, text) in enumerate(lines):
+            item = self.lyrics.item(index)
+            if item is not None:
+                self._style_lyric_item(item, index, time_sec, text)
+        self.sectionsReplaced.emit(dict(self._sections))
 
     def _show_section_menu(self, pos):
         """

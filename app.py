@@ -234,6 +234,7 @@ class MainWindow(QMainWindow):
         self.live_view.songSelected.connect(self._goto_show_song)
         self.live_view.songStepRequested.connect(self._step_show_song)
         self.live_view.sectionMarked.connect(self._on_section_mark_changed)
+        self.live_view.sectionsReplaced.connect(self._on_sections_replaced)
 
         self.library_view = LibraryView(self.library)
         self.library_view.songLoaded.connect(self._on_song_loaded)
@@ -312,12 +313,23 @@ class MainWindow(QMainWindow):
         if song is None:
             return
         song.set_section(index, label)
+        self._persist_sections(song)
+
+    def _on_sections_replaced(self, marks):
+        """Auto-mark (REQ-F-PLAY-09): semua penanda diganti dalam satu tulisan."""
+        song = self._current_song
+        if song is None:
+            return
+        song.set_sections(marks)
+        self._persist_sections(song)
+
+    def _persist_sections(self, song):
         if self.library.get(song.id) is not None:
             self.library.upsert(song)
         else:
             self.library_view._show_status(
-                "Section mark kept for this session only. "
-                "Save this song to the library to keep it."
+                "Section marks kept for this session only. "
+                "Save this song to the library to keep them."
             )
 
     # ---------- navigasi Show (REQ-F-SET-03) ----------
