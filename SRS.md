@@ -10,13 +10,21 @@
 
 | | |
 |---|---|
-| **Versi dokumen** | 0.11.2 |
+| **Versi dokumen** | 0.11.3 |
 | **Status** | Living document, diperbarui seiring development di Claude Code |
 | **Tanggal dibuat** | 2026-08-31 |
-| **Terakhir direvisi** | 2026-09-07 (v0.11.2) |
+| **Terakhir direvisi** | 2026-09-07 (v0.11.3) |
 | **Pemilik produk** | (kamu) |
 | **Baseline kode saat ini** | Python, **PySide6/Qt**, LRCLIB, SpoutGL |
 | **Mockup UI** | `MOCKUP.md` (wireframe teks) |
+
+**Perubahan v0.11.3 (ringkas):**
+- **Baris lirik yang lebih lebar dari kanvas tidak lagi terpotong** (§3.20).
+  Dipecah jadi dua atau tiga baris dengan pembagian seimbang, ukuran font
+  tetap penuh. Terukur: 13 dari 566 baris (2,3%) meluber, terparah 1,38x;
+  sesudah perbaikan 0 terpotong dan 0 perlu dikecilkan.
+- Baris yang dipecah sekarang mengambil dua slot vertikal, bukan dijejalkan
+  ke satu slot. Celah ke baris tetangga naik dari 6px ke 55px (§3.20).
 
 **Perubahan v0.11.2 (ringkas):**
 - **Auto-mark bagian lagu (REQ-F-PLAY-09).** Tombol di tab Live menebak
@@ -1443,6 +1451,82 @@ penanda sekaligus. Kalau auto-mark memakai `set_section()` berkali-kali,
 sepuluh penanda berarti sepuluh kali `library.upsert()` dan sepuluh kali
 tulis file.
 
+### 3.20 Baris lirik lebih lebar dari kanvas (v0.11.3)
+
+Laporan: satu baris lirik terpotong di output, dan mengecilkan ukuran font
+di tab Style membuat SEMUA baris jadi terlalu kecil untuk dibaca.
+
+**Dulu tidak ada penanganan lebar sama sekali.** `render()` menghitung
+`x = (width - text_w) / 2`. Kalau `text_w > width`, x jadi negatif dan
+teksnya meluber keluar kanvas di kedua sisi, terpotong begitu saja.
+
+**Diukur dulu di 566 baris berteks di library:**
+
+| | |
+|---|---|
+| Melebihi lebar 1920px | 13 baris (2,3%) |
+| Terparah | 1,38x lebar kanvas |
+| Mayoritas | 1,04x sampai 1,16x |
+
+Angka 1,38x itu yang menentukan desainnya. Kalau diperbaiki dengan
+mengecilkan font baris itu saja, 64px jatuh ke 46px, dan itu keluhan yang
+sama dengan yang dilaporkan, cuma pindah tempat. **Jadi urutannya: pecah
+baris dulu, kecilkan belakangan.** Sesudah pemecahan: 15 baris terpecah, 0
+baris masih terpotong, dan **0 baris perlu dikecilkan sama sekali**. Semua
+tetap 64px penuh.
+
+Pemecahannya cari titik potong yang membuat baris TERLEBAR-nya paling
+kecil, bukan word-wrap greedy. Teks lirik rata tengah, dan greedy
+menghasilkan baris pertama sepanjang layar dengan dua kata menggantung.
+
+#### Bug lanjutan: satu slot tidak muat dua baris
+
+Percobaan pertama menggambar kedua pecahan di dalam slot milik baris itu.
+Hasilnya muat di lebar, tapi celah vertikal ke baris tetangga diukur dari
+piksel alpha frame jadi begini:
+
+| | celah antar pita teks (px) |
+|---|---|
+| Baris biasa | 60, 42, 41, 57 |
+| Baris dipecah, satu slot | 56, **6, 6, 5**, 57 |
+
+Ini bukan soal tuning. Dua baris 64px butuh sekitar 118px ink, sementara
+satu slot cuma `64 x 1,55 = 99px`. Berapa pun jarak antar pecahan
+dirapatkan, tidak akan muat.
+
+**Perbaikannya: baris yang dipecah jadi N baris tampilan mengambil N
+slot.** Posisi vertikal tidak lagi `dist * line_spacing`, tapi hasil
+penjumlahan tinggi slot. Sesudahnya: `57, 55, 6, 55, 56` -- angka 6 yang
+tersisa itu jarak antar dua pecahan baris yang SAMA, memang harus rapat,
+dan celah ke tetangga (55px) malah lebih lega dari baris biasa (41px).
+
+#### Dua jebakan di model slot variabel
+
+**Titik acuannya `floor()`, bukan `round()`.** Dengan `round()`, pusat
+acuan melompat saat pecahan posisi melewati 0.5, dan karena tinggi slot di
+kiri dan kanan lompatan itu berbeda, teksnya tersentak di tengah animasi.
+Dengan `floor()`, posisi di f=1 persis sama dengan posisi di f=0 slot
+berikutnya. Diverifikasi dengan menyapu 400 langkah melewati baris yang
+dipecah: lompatan terbesar 1,49px, masih di bawah gerak wajar per langkah
+1,98px. Mulus.
+
+**Jumlah baris dihitung pada ukuran font AKTIF, bukan ukuran baris itu saat
+ini.** Baris konteks dirender lebih kecil dan bisa saja muat satu baris di
+ukuran kecilnya. Kalau jumlah barisnya ikut berubah saat mengecil, tinggi
+slotnya berubah juga dan seluruh tata letak bergeser sendiri selama scroll.
+Jumlah baris harus sifat tetap milik baris lirik, bukan fungsi posisinya.
+
+#### Ongkos
+
+Render kondisi terburuk (animasi terus, cache frame tidak pernah menolong):
+22,7 ms/frame di lagu yang punya baris dipecah, 20,5 ms di lagu 137 baris.
+Budget 30 fps adalah 33,3 ms, jadi masih lega. Pengukuran lebar teks
+di-cache per (teks, ukuran).
+
+Preview di aplikasi memakai renderer yang sama, jadi ikut terpecah dengan
+cara yang sama. REQ-F-OUT-08 (preview identik dengan output) tetap utuh
+tanpa perlu disentuh.
+
 ---
 
 ## 4. Requirement Fungsional
@@ -1500,6 +1584,7 @@ Format ID: `REQ-F-<area>-<nomor>`. Prioritas MoSCoW: **M**ust,
 | REQ-F-OUT-07 | Sistem **boleh** mendukung banyak Spout sender sekaligus (mis. output terpisah untuk teks vs untuk background), untuk fleksibilitas compositing di Resolume. | C *(dievaluasi, **ditunda**, murah secara teknis tapi belum ada isi untuk sender kedua; butuh REQ-F-STYLE-04 dulu, §3.10)* |
 | REQ-F-OUT-09 | Sistem **harus** menyediakan jendela keluaran yang bisa ditangkap aplikasi lain (OBS, TikTok Live Studio) atau di-fullscreen di layar kedua, dengan pilihan latar hitam atau chroma key, dan mode bersih tanpa bingkai. *(v0.10, baru)* | M *(selesai, §3.14)* |
 | REQ-F-OUT-08 | Preview di GUI dan frame yang dikirim ke Spout **harus** dihasilkan oleh **jalur render yang sama** (`RenderStyle` + `ScrollAnimator` + `MultiLineLyricRenderer` yang identik, beda hanya faktor skala resolusi). Dilarang membuat tiruan tampilan terpisah di sisi GUI, kalau preview dan output bisa berbeda, panel Style (§4.5) kehilangan gunanya. *(v0.3, baru)* | M |
+| REQ-F-OUT-10 | Baris lirik yang lebih lebar dari kanvas **harus** dipecah jadi beberapa baris tampilan, bukan dibiarkan terpotong di tepi, dan pemecahan itu tidak boleh mengorbankan ukuran font baris lain. | M *(selesai, diukur di §3.20)* |
 
 ### 4.5 Styling & Template (`STYLE`)
 

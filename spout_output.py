@@ -23,6 +23,7 @@ Windows, SPOUT_AVAILABLE akan False dan aplikasi akan kasih tahu lewat
 GUI -- tapi pencarian lirik & logika playback tetap bisa dites di OS
 apa pun.
 """
+import math
 import threading
 import time
 
@@ -32,6 +33,13 @@ from dataclasses import replace
 
 from render_style import RenderStyle, DEFAULT_STYLE
 from scroll_anim import ScrollAnimator, ease_out_cubic
+
+# Baris lirik yang lebih lebar dari kanvas (SRS §3.20). Terukur di library
+# uji: 13 dari 566 baris berteks (2,3%) melewati 1920px, terparah 1,38x.
+SAFE_WIDTH_RATIO = 0.96   # sisakan margin, teks mepet tepi layar terlihat salah
+MAX_WRAP_ROWS = 3         # tiga baris untuk satu baris lirik sudah batasnya
+MIN_FIT_SCALE = 0.55      # batas pengecilan; di bawah ini lebih baik terpotong
+                          # daripada tampil terlalu kecil untuk dibaca penonton
 
 try:
     import pygame
@@ -117,6 +125,7 @@ class MultiLineLyricRenderer:
             print("[MultiLineLyricRenderer] No TrueType font found, falling back to Pillow's "
                   "built-in font (fixed small size). Set font_path to a valid .ttf if needed.")
         self._font_cache = {}
+        self._fit_cache = {}
 
     def _font(self, size: int):
         size = max(8, size)
@@ -168,6 +177,110 @@ class MultiLineLyricRenderer:
             return 1.0
         return max(0.0, nearest / self.edge_fade_px)
 
+    def _text_width(self, draw, text, font) -> int:
+        bbox = draw.textbbox((0, 0), text, font=font)
+        return bbox[2] - bbox[0]
+
+    def _wrap_balanced(self, draw, text, font, usable):
+        """
+        Pecah satu baris jadi maksimal MAX_WRAP_ROWS baris, dibagi SEIMBANG.
+
+        Bukan word-wrap greedy (isi penuh baris pertama, sisanya dibuang ke
+        baris kedua). Teks lirik ditampilkan rata tengah, dan greedy
+        menghasilkan baris pertama sepanjang layar dengan dua kata
+        menggantung di bawahnya. Yang dicari titik potong yang membuat
+        baris TERLEBAR-nya sekecil mungkin.
+        """
+        words = text.split()
+        if len(words) < 2:
+            return [text]           # satu kata panjang, tidak ada yang bisa dipotong
+
+        best = None
+        for cut in range(1, len(words)):
+            rows = [" ".join(words[:cut]), " ".join(words[cut:])]
+            widest = max(self._text_width(draw, r, font) for r in rows)
+            if best is None or widest < best[0]:
+                best = (widest, rows)
+        widest, rows = best
+
+        # Masih kelebaran walau sudah dua baris: coba tiga.
+        if widest > usable and len(words) >= 3 and MAX_WRAP_ROWS >= 3:
+            best3 = None
+            for a in range(1, len(words) - 1):
+                for b in range(a + 1, len(words)):
+                    rows3 = [" ".join(words[:a]), " ".join(words[a:b]),
+                             " ".join(words[b:])]
+                    w3 = max(self._text_width(draw, r, font) for r in rows3)
+                    if best3 is None or w3 < best3[0]:
+                        best3 = (w3, rows3)
+            if best3 is not None and best3[0] < widest:
+                return best3[1]
+        return rows
+
+    def _fit_line(self, draw, text, size):
+        """
+        (baris-baris, ukuran font) yang dijamin muat di lebar kanvas.
+
+        Urutannya sengaja begini: **pecah baris dulu, kecilkan belakangan.**
+        Baris terpanjang di library uji melebihi kanvas 1,38x; kalau
+        langsung dikecilkan, font 64px jatuh ke 46px dan satu baris itu
+        jadi jauh lebih kecil dari baris lain. Dipecah dua, ukurannya
+        tetap 64px. Pengecilan cuma dipakai untuk sisa kasus yang tidak
+        bisa dipecah (satu kata sangat panjang).
+        """
+        key = (text, size)
+        cached = self._fit_cache.get(key)
+        if cached is not None:
+            return cached
+
+        usable = self.width * SAFE_WIDTH_RATIO
+        font = self._font(size)
+        rows = [text]
+
+        if self._text_width(draw, text, font) > usable:
+            rows = self._wrap_balanced(draw, text, font, usable)
+            widest = max(self._text_width(draw, r, font) for r in rows)
+            if widest > usable:
+                # Tetap tidak muat: kecilkan seperlunya, tidak lebih.
+                scale = max(MIN_FIT_SCALE, usable / widest)
+                size = max(8, int(size * scale))
+                font = self._font(size)
+
+        result = (rows, size)
+        if len(self._fit_cache) > 512:      # lagu ganti-ganti, jangan tumbuh terus
+            self._fit_cache.clear()
+        self._fit_cache[key] = result
+        return result
+
+    def _row_count(self, draw, text) -> int:
+        """
+        Berapa baris tampilan yang dipakai satu baris lirik.
+
+        Selalu dihitung pada ukuran font AKTIF, bukan ukuran baris itu saat
+        ini. Baris konteks dirender lebih kecil dan bisa saja muat satu
+        baris di ukuran kecilnya; kalau jumlah barisnya ikut berubah saat
+        mengecil, tinggi slotnya berubah juga dan seluruh tata letak
+        bergeser sendiri selama animasi scroll. Jumlah baris harus sifat
+        tetap milik baris lirik itu, bukan fungsi dari posisinya.
+        """
+        if not text:
+            return 1
+        rows, _ = self._fit_line(draw, text, self.active_font_size)
+        return len(rows)
+
+    def _slot_height(self, draw, lines, i) -> float:
+        """
+        Tinggi jatah vertikal satu baris lirik.
+
+        Baris yang dipecah jadi N baris tampilan mengambil N slot. Tanpa
+        ini, dua baris 64px (butuh ~118px ink) dijejalkan ke satu slot
+        99px, dan celah ke baris tetangga terukur tinggal 5-6px padahal
+        normalnya 41px (SRS §3.20).
+        """
+        if 0 <= i < len(lines):
+            return self._row_count(draw, lines[i][1]) * self.line_spacing
+        return float(self.line_spacing)
+
     def render(self, lines, displayed_pos: float) -> bytes:
         """
         lines: list of (time_sec, text) -- hasil parse_lrc().
@@ -184,6 +297,26 @@ class MultiLineLyricRenderer:
         lo = max(0, center_idx - window)
         hi = min(len(lines) - 1, center_idx + window)
 
+        # Posisi vertikal dihitung dengan menjumlahkan tinggi slot, bukan
+        # `dist * line_spacing`, karena baris yang dipecah memakai lebih dari
+        # satu slot. Titik acuannya floor(displayed_pos), BUKAN round():
+        # dengan round(), pusatnya melompat saat pecahan melewati 0.5 dan
+        # jumlah tinggi di kiri/kanan lompatan tidak sama, jadi teksnya
+        # tersentak di tengah animasi. Dengan floor, sambungannya mulus.
+        anchor_idx = math.floor(displayed_pos)
+        frac = displayed_pos - anchor_idx
+
+        def centre_gap(i):
+            """Jarak antar titik tengah baris i dan i+1."""
+            return (self._slot_height(draw, lines, i)
+                    + self._slot_height(draw, lines, i + 1)) / 2
+
+        y_positions = {anchor_idx: self.vertical_anchor_y - frac * centre_gap(anchor_idx)}
+        for i in range(anchor_idx, hi):
+            y_positions[i + 1] = y_positions[i] + centre_gap(i)
+        for i in range(anchor_idx, lo, -1):
+            y_positions[i - 1] = y_positions[i] - centre_gap(i - 1)
+
         for i in range(lo, hi + 1):
             dist = i - displayed_pos
             size, opacity, bold = self._style_at_distance(dist)
@@ -191,7 +324,9 @@ class MultiLineLyricRenderer:
             if opacity <= 0.02:
                 continue
 
-            y_center = self.vertical_anchor_y + dist * self.line_spacing
+            y_center = y_positions.get(i)
+            if y_center is None:
+                continue
             if y_center < -size or y_center > self.height + size:
                 continue
 
@@ -203,12 +338,10 @@ class MultiLineLyricRenderer:
             if not text:
                 continue
 
+            # Baris yang lebih lebar dari kanvas dipecah di sini, bukan
+            # dibiarkan terpotong di tepi layar (SRS §3.20).
+            rows, size = self._fit_line(draw, text, size)
             font = self._font(size)
-            bbox = draw.textbbox((0, 0), text, font=font)
-            text_w = bbox[2] - bbox[0]
-            text_h = bbox[3] - bbox[1]
-            x = (self.width - text_w) / 2 - bbox[0]
-            y = y_center - text_h / 2 - bbox[1]
 
             alpha = int(255 * opacity)
             fill = (*self.text_color[:3], min(self.text_color[3], alpha))
@@ -216,14 +349,28 @@ class MultiLineLyricRenderer:
 
             ow = self.outline_width if dist == 0 or abs(dist) < 1 else max(1, self.outline_width - 1)
 
-            # Pakai stroke_width bawaan Pillow, JANGAN menggambar teks berkali-kali
-            # dengan offset. Cara manual itu butuh (2*ow+1)^2 - 1 = 48 kali draw per
-            # baris untuk ow=3 -- sekitar 290 draw per frame -- dan itulah yang bikin
-            # satu frame 1920x1080 makan ~137ms (maks 7 fps). stroke_width melakukan
-            # hal yang sama dalam satu lintasan: ~9ms, dan outline-nya membulat rapi
-            # di sudut, bukan kotak. Diukur, bukan diperkirakan -- lihat SRS §3.2.
-            draw.text((x, y), text, font=font, fill=fill,
-                      stroke_width=ow, stroke_fill=outline_fill)
+            # Baris pecahan dirapatkan (1.12x, bukan line_spacing penuh) dan
+            # dipusatkan pada slot milik baris lirik ini. Dengan begitu baris
+            # tetangga tidak perlu bergeser, dan model geometri "satu baris
+            # lirik = satu slot" tetap utuh, termasuk untuk animasi scroll.
+            row_h = size * 1.12
+            first_center = y_center - (len(rows) - 1) * row_h / 2
+
+            for row_no, row_text in enumerate(rows):
+                bbox = draw.textbbox((0, 0), row_text, font=font)
+                text_w = bbox[2] - bbox[0]
+                text_h = bbox[3] - bbox[1]
+                x = (self.width - text_w) / 2 - bbox[0]
+                y = first_center + row_no * row_h - text_h / 2 - bbox[1]
+
+                # Pakai stroke_width bawaan Pillow, JANGAN menggambar teks berkali-kali
+                # dengan offset. Cara manual itu butuh (2*ow+1)^2 - 1 = 48 kali draw per
+                # baris untuk ow=3 -- sekitar 290 draw per frame -- dan itulah yang bikin
+                # satu frame 1920x1080 makan ~137ms (maks 7 fps). stroke_width melakukan
+                # hal yang sama dalam satu lintasan: ~9ms, dan outline-nya membulat rapi
+                # di sudut, bukan kotak. Diukur, bukan diperkirakan -- lihat SRS §3.2.
+                draw.text((x, y), row_text, font=font, fill=fill,
+                          stroke_width=ow, stroke_fill=outline_fill)
 
         return img.tobytes("raw", "RGBA")
 

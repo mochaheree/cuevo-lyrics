@@ -51,6 +51,11 @@ if you want a lower third. Both are set in the Style tab, no code editing.
 **It keeps working offline.** Once a song is in your local library, LRCLIB
 being unreachable does not stop the show.
 
+**Long lines are wrapped, not cut off.** A lyric line wider than the output
+canvas is split across two or three rows at a balanced break point, keeping
+the font at full size. Only a line that cannot be split at all, a single very
+long word, gets scaled down.
+
 ## Requirements
 
 - **Windows** for Spout output. Spout is a Windows-only GPU texture sharing
